@@ -34,47 +34,21 @@ export const initial = {
   },
 };
 export const bodies = {
-  sedan: {
-    name: "Sedã",
-    tag: "O clássico",
-    roof: 194,
-    back: 276,
-    deck: 329,
-    length: 0,
-  },
-  hatch: {
-    name: "Hatch",
-    tag: "Pequeno rebelde",
-    roof: 184,
-    back: 302,
-    deck: 318,
-    length: -24,
-  },
-  coupe: {
-    name: "Cupê",
-    tag: "Alma esportiva",
-    roof: 211,
-    back: 274,
-    deck: 332,
-    length: 14,
-  },
-  muscle: {
-    name: "Muscle",
-    tag: "Pura presença",
-    roof: 202,
-    back: 263,
-    deck: 325,
-    length: 30,
-  },
-  wagon: {
-    name: "Perua",
-    tag: "Mais histórias",
-    roof: 177,
-    back: 294,
-    deck: 317,
-    length: 26,
-  },
+  sedan: { name: "Sedã", tag: "O clássico" },
+  hatch: { name: "Hatch", tag: "Pequeno rebelde" },
+  coupe: { name: "Cupê", tag: "Alma esportiva" },
+  muscle: { name: "Muscle", tag: "Pura presença" },
+  wagon: { name: "Perua", tag: "Mais histórias" },
 };
+export function normalizeConfiguration(value = {}) {
+  const config = {
+    ...structuredClone(initial),
+    ...value,
+    plate: { ...initial.plate, ...value.plate },
+  };
+  if (!bodies[config.body]) config.body = initial.body;
+  return config;
+}
 export const colors = [
   "#df593e",
   "#f1b849",

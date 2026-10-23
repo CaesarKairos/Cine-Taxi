@@ -1,22 +1,243 @@
-import { bodies } from "./state.js";
-import { plate } from "./plate.js";
-import { wheel } from "./parts.js";
+﻿import * as THREE from "three";
 import { materials } from "./materials.js";
-let carSequence = 0;
-export function car(s, { shadow = true } = {}) {
-  const uid = `car-${++carSequence}-`;
-  const b = bodies[s.body],
-    r = b.roof,
-    k = b.back,
-    d = b.deck,
-    L = b.length;
-  const dark = s.finish === "matte" ? "#00000026" : "#00000035";
-  const poly = (points, fill, extra = "") =>
-    `<polygon points="${points}" fill="${fill}" ${extra}/>`;
-  let pw = s.plate.width,
-    ph = s.plate.height,
-    scale = Math.min(1, 150 / pw, 58 / ph);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 580" role="img" aria-label="Miniatura ${b.name} vista pela traseira">${materials(s)}${shadow ? '<ellipse cx="414" cy="500" rx="252" ry="32" fill="#33433a" opacity=".18" filter="url(#blur)"/>' : ""}<g stroke-linejoin="round">${wheel(s, 590 + L, 383, 22, 40)}${wheel(s, 259, 453, 27, 48)}${wheel(s, 544, 470, 30, 48)}${poly(`207,${d} 351,${d - 88} 640,${d - 69} 651,402 554,462 216,438`, s.color)}${poly(`554,${d + 25} 640,${d - 69} 651,402 554,462`, dark)}${poly(`207,${d} 351,${d - 88} 640,${d - 69} 554,${d + 25}`, s.color)}${poly(`207,${d} 351,${d - 88} 640,${d - 69} 554,${d + 25}`, "#ffffff14")}${poly(`252,${k} 324,${r} 499,${r - 16} 583,${k - 19} 551,${d + 1} 226,${d - 23}`, s.color)}${poly(`324,${r} 397,${r - 43} 558,${r - 39} 499,${r - 16}`, s.color)}${poly(`324,${r} 397,${r - 43} 558,${r - 39} 499,${r - 16}`, "#ffffff32")}${poly(`499,${r - 16} 558,${r - 39} 626,${k - 68} 583,${k - 19}`, s.color)}${poly(`499,${r - 16} 558,${r - 39} 626,${k - 68} 583,${k - 19}`, "#00000022")}<g transform="translate(406 ${(r + k) / 2}) scale(${0.65 + s.window * 0.0035}) translate(-406 ${-(r + k) / 2})">${poly(`332,${r + 9} 491,${r - 5} 546,${k - 1} 266,${k - 7}`, "#25333b")}${poly(`338,${r + 15} 486,${r + 2} 533,${k - 9} 279,${k - 14}`, "url(#glass)")}${poly(`338,${r + 15} 362,${r + 13} 409,${k - 12} 279,${k - 14}`, "#ffffff12")}</g>${poly(`499,${r - 16} 558,${r - 39} 626,${k - 68} 640,${d - 69} 554,${d + 25} 551,${d + 1} 583,${k - 19}`, s.color)}${poly(`499,${r - 16} 558,${r - 39} 626,${k - 68} 640,${d - 69} 554,${d + 25} 551,${d + 1} 583,${k - 19}`, "#00000020")}${poly(`512,${r - 7} 555,${r - 26} 609,${k - 65} 567,${k - 30}`, "#25333b")}${poly(`524,${r - 5} 553,${r - 19} 598,${k - 66} 569,${k - 39}`, "url(#glass)")}<path d="M569 ${k - 39}L553 ${r - 19}" stroke="#222f35" stroke-width="5"/>${poly(`226,${d - 23} 551,${d + 1} 554,${d + 25} 207,${d}`, s.color)}<path d="M227 ${d - 21}L547 ${d + 3}" stroke="#ffffff" opacity=".25" stroke-width="3"/>${s.stripes ? poly(`362,${r - 41} 390,${r - 43} 324,${r} 382,${k - 4} 345,${k - 5} 295,${r + 4}`, s.secondary) + poly(`340,${k + 6} 378,${k + 8} 397,${d + 13} 355,${d + 10}`, s.secondary) : ""}<path d="M575 ${k - 8}L619 ${k - 43}L633 387L577 421Z" fill="none" stroke="#000" opacity=".16" stroke-width="2"/><path d="M587 320l20 -10" stroke="#e3dcd0" stroke-width="4"/>${poly(`213,${d + 7} 550,${d + 31} 547,420 219,398`, s.secondary)}${poly(`220,${d + 13} 542,${d + 36} 541,413 225,391`, "#000000c0")}${[242, 490].map((x) => (s.lights === "round" ? `<g transform="translate(${x} ${d + 36 + (x - 242) * 0.07})"><ellipse rx="16" ry="18" fill="#451f20"/><ellipse rx="12" ry="14" fill="#f56d59"/><ellipse cx="4" cy="-4" rx="5" ry="6" fill="#ffa48b"/><ellipse cx="34" cy="2" rx="12" ry="15" fill="#d44c36"/><ellipse cx="35" cy="0" rx="7" ry="10" fill="#ffba7b"/></g>` : s.lights === "vertical" ? `<rect x="${x}" y="${d + 18 + (x - 242) * 0.07}" width="24" height="48" rx="4" fill="#ed6853" stroke="#e1b7a0" stroke-width="3"/>` : `<g transform="translate(${x - 8} ${d + 22 + (x - 242) * 0.07})"><rect width="72" height="24" rx="${s.lights === "bar" ? 2 : 7}" fill="#de4c3e"/><path d="M5 7H66M5 13H66" stroke="#ff9a79" stroke-width="3"/><rect x="49" width="18" height="24" fill="#f3c592"/></g>`)).join("")}<g transform="matrix(1 .07 0 1 ${389 - (pw * scale) / 2} ${d + 24}) scale(${scale})">${plate(s.plate)}</g><text x="385" y="${d + 22}" font-family="sans-serif" font-size="8" letter-spacing="5" fill="#f2e7d4">MINI MOTOR</text>${s.bumper === "sport" ? poly("213,409 551,433 549,464 221,441", "#28343c") : `<path d="M211 413L550 437L641 386L642 404L550 457L213 432Z" fill="${s.bumper === "chrome" ? "url(#chrome)" : s.secondary}" stroke="#263b4233" stroke-width="2"/>`}${s.bumper === "sport" ? '<path d="M336 437l-5 15m30 -12l-5 15m31 -13l-5 15m30 -12l-5 15" stroke="#090f14" stroke-width="7"/>' : ""}${s.trim ? '<path d="M567 420L639 378" stroke="#e6decb" stroke-width="3"/>' : ""}${(s.exhaust === "center" ? [385] : s.exhaust === "quad" ? [247, 272, 490, 515] : s.exhaust === "dual" ? [257, 499] : [257]).map((x) => `<ellipse cx="${x}" cy="${446 + (x - 257) * 0.07}" rx="11" ry="7" fill="#c4cbc8"/><ellipse cx="${x}" cy="${446 + (x - 257) * 0.07}" rx="7" ry="4" fill="#20292d"/>`).join("")}${s.spoiler !== "none" ? `<path d="M270 ${d - 8}V${d - (s.spoiler === "wild" ? 55 : 25)}M511 ${d + 9}V${d - (s.spoiler === "wild" ? 40 : 10)}" stroke="#2c3337" stroke-width="8"/>${poly(`234,${d - (s.spoiler === "wild" ? 63 : 31)} 320,${d - (s.spoiler === "wild" ? 82 : 50)} 594,${d - (s.spoiler === "wild" ? 61 : 29)} 538,${d - (s.spoiler === "wild" ? 39 : 7)}`, s.spoiler === "lip" ? s.color : "#303a40")}` : ""}${s.sticker ? '<g transform="translate(585 354) rotate(-30)"><circle r="15" fill="#f6d56a"/><text y="5" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#2d3b3d">★</text></g>' : ""}${s.finish === "gloss" ? `<path d="M227 ${d - 3}L548 ${d + 21}" stroke="#fff" stroke-width="2" opacity=".3"/>` : ""}</g></svg>`
-    .replace(/id="([^"]+)"/g, (_, id) => `id="${uid}${id}"`)
-    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${uid}${id})`);
+import { models, modelData } from "./vehicle/models.js";
+import { mesh, box, surface } from "./vehicle/geometry.js";
+import { wheels, rearParts, accessories } from "./vehicle/parts.js";
+import { hatchCabin, wagonCabin } from "./vehicle/cabins.js";
+
+function semanticGeometry(positions) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+function normalOf(triangle) {
+  return new THREE.Vector3()
+    .subVectors(triangle[1], triangle[0])
+    .cross(new THREE.Vector3().subVectors(triangle[2], triangle[0]))
+    .normalize();
+}
+function clipX(poly, bound, keepGreater) {
+  const out = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i],
+      q = poly[(i + 1) % poly.length],
+      pin = keepGreater ? p.x >= bound : p.x <= bound,
+      qin = keepGreater ? q.x >= bound : q.x <= bound;
+    if (pin) out.push(p);
+    if (pin !== qin) out.push(p.clone().lerp(q, (bound - p.x) / (q.x - p.x)));
+  }
+  return out;
+}
+function stripes(group, positions, material) {
+  const vertices = [];
+  for (let i = 0; i < positions.length; i += 9) {
+    const tri = [0, 3, 6].map(
+      (k) => new THREE.Vector3(...positions.slice(i + k, i + k + 3)),
+    );
+    const n = normalOf(tri);
+    if (Math.abs(n.y) < 0.35 || tri.every((p) => p.y < 0.7)) continue;
+    if (n.y < 0) n.negate();
+    for (const [lo, hi] of [
+      [-0.15, -0.065],
+      [0.065, 0.15],
+    ]) {
+      const clipped = clipX(clipX(tri, lo, true), hi, false);
+      for (let j = 1; j < clipped.length - 1; j++)
+        for (const p of [clipped[0], clipped[j], clipped[j + 1]])
+          vertices.push(...p.clone().addScaledVector(n, 0.003).toArray());
+    }
+  }
+  if (vertices.length) {
+    material.side = THREE.DoubleSide;
+    group.add(mesh(semanticGeometry(vertices), material, "racing-stripes"));
+  }
+}
+function glass(group, positions, s, m) {
+  const rear = [],
+    others = [];
+  for (let i = 0; i < positions.length; i += 9) {
+    const tri = [0, 3, 6].map(
+      (k) => new THREE.Vector3(...positions.slice(i + k, i + k + 3)),
+    );
+    const n = normalOf(tri);
+    (n.z < -0.2 ? rear : others).push(...positions.slice(i, i + 9));
+  }
+  if (others.length)
+    group.add(mesh(semanticGeometry(others), m.glass, "windows"));
+  if (rear.length) {
+    const base = mesh(semanticGeometry(rear), m.paint, "rear-window-surround");
+    group.add(base);
+    const center = new THREE.Vector3();
+    for (let i = 0; i < rear.length; i += 3)
+      center.add(new THREE.Vector3(...rear.slice(i, i + 3)));
+    center.multiplyScalar(3 / rear.length);
+    const scale = 0.75 + Number(s.window) * 0.0025;
+    const small = [];
+    for (let i = 0; i < rear.length; i += 3) {
+      const p = new THREE.Vector3(...rear.slice(i, i + 3));
+      p.sub(center).multiplyScalar(scale).add(center);
+      p.z -= 0.002;
+      small.push(...p.toArray());
+    }
+    group.add(mesh(semanticGeometry(small), m.glass, "rear-window"));
+  }
+}
+// Muscle has its own broad cabin, sail panels and raised trunk, authored on the
+// donor chassis. This replaces the sports sedan's greenhouse rather than scaling it.
+function muscleCabin(group, a, s, m) {
+  m.paint.side = THREE.DoubleSide;
+  const baseY = 0.81,
+    topY = 1.14;
+  group.add(
+    box([1.05, 0.065, 0.82], [0, 1.155, -0.13], m.paint, 0.035, "muscle-roof"),
+  );
+  for (const side of [-1, 1]) {
+    const body = surface(
+      [
+        [side * 0.62, baseY, -0.89],
+        [side * 0.62, baseY, 0.57],
+        [side * 0.51, topY, 0.27],
+        [side * 0.51, topY, -0.54],
+      ],
+      m.paint,
+      "muscle-sail-panel",
+    );
+    group.add(body);
+    group.add(
+      surface(
+        [
+          [side * 0.605, 0.86, -0.68],
+          [side * 0.605, 0.86, 0.47],
+          [side * 0.527, 1.1, 0.23],
+          [side * 0.527, 1.1, -0.47],
+        ],
+        m.glass,
+        "muscle-side-window",
+      ),
+    );
+    const pillar = box(
+      [0.028, 0.27, 0.036],
+      [side * 0.56, 0.98, 0.01],
+      m.paint,
+      0.005,
+    );
+    pillar.rotation.z = side * 0.32;
+    group.add(pillar);
+  }
+  group.add(
+    surface(
+      [
+        [-0.62, baseY, -0.89],
+        [0.62, baseY, -0.89],
+        [0.51, topY, -0.54],
+        [-0.51, topY, -0.54],
+      ],
+      m.paint,
+      "muscle-rear-pillars",
+    ),
+  );
+  const rw = 0.46 * (0.75 + Number(s.window) * 0.0025);
+  group.add(
+    surface(
+      [
+        [-rw, 0.856, -0.849],
+        [rw, 0.856, -0.849],
+        [rw * 0.9, 1.101, -0.585],
+        [-rw * 0.9, 1.101, -0.585],
+      ],
+      m.glass,
+      "rear-window",
+    ),
+  );
+  group.add(
+    surface(
+      [
+        [-0.62, baseY, 0.57],
+        [-0.51, topY, 0.27],
+        [0.51, topY, 0.27],
+        [0.62, baseY, 0.57],
+      ],
+      m.paint,
+    ),
+  );
+  group.add(
+    surface(
+      [
+        [-0.53, 0.861, 0.528],
+        [-0.46, 1.1, 0.309],
+        [0.46, 1.1, 0.309],
+        [0.53, 0.861, 0.528],
+      ],
+      m.glass,
+    ),
+  );
+  group.add(
+    box([1.4, 0.052, 0.49], [0, 0.818, -1.16], m.paint, 0.025, "muscle-trunk"),
+  );
+  if (s.stripes)
+    for (const x of [-0.105, 0.105])
+      group.add(
+        box([0.085, 0.003, 0.73], [x, 1.189, -0.13], m.secondary, 0.001),
+      );
+}
+export async function buildVehicle(configuration) {
+  const s = structuredClone(configuration),
+    a = models[s.body] || models.coupe;
+  await document.fonts.load(
+    `${s.plate.font === "Barlow Condensed" ? s.plate.weight : 400} ${s.plate.size}px "${s.plate.font}"`,
+  );
+  const data = await modelData(s.body);
+  const m = materials(s),
+    group = new THREE.Group();
+  group.name = `vehicle-${s.body}`;
+  for (const [kind, source] of Object.entries(data.parts)) {
+    let positions = source;
+    if (["muscle", "hatch", "wagon"].includes(s.body)) {
+      const cutoff = { muscle: 0.84, hatch: 0.865, wagon: 0.721 }[s.body];
+      positions = [];
+      for (let i = 0; i < source.length; i += 9)
+        if (
+          [source[i + 1], source[i + 4], source[i + 7]].every((y) => y < cutoff)
+        )
+          positions.push(...source.slice(i, i + 9));
+    }
+    if (!positions.length) continue;
+    if (kind === "glass") glass(group, positions, s, m);
+    else {
+      const obj = mesh(
+        semanticGeometry(positions),
+        m[kind] || m.paint,
+        `body-${kind}`,
+      );
+      group.add(obj);
+      if (s.stripes && ["paint", "lower"].includes(kind))
+        stripes(group, positions, m.secondary);
+    }
+  }
+  if (s.body === "muscle") muscleCabin(group, a, s, m);
+  if (s.body === "hatch") hatchCabin(group, s, m);
+  if (s.body === "wagon") wagonCabin(group, s, m);
+  wheels(group, data, s, m, a);
+  rearParts(group, a, s, m);
+  accessories(group, a, s, m);
+  // A floor-hugging chassis connects all four wheels and hides no tire silhouette.
+  group.add(
+    box(
+      [a.width * 0.68, 0.07, Math.abs(a.rear) * 1.35],
+      [0, 0.22, 0],
+      m.dark,
+      0.02,
+      "chassis",
+    ),
+  );
+  group.userData = { body: s.body, configuration: s, triangles: 0 };
+  group.traverse((o) => {
+    if (o.geometry)
+      group.userData.triangles +=
+        (o.geometry.index?.count || o.geometry.attributes.position.count) / 3;
+  });
+  // Dispose materials which a configuration did not use, too.
+  group.userData.materials = Object.values(m);
+  return group;
 }

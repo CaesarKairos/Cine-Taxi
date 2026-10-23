@@ -1,16 +1,25 @@
 import { test, expect } from "@playwright/test";
 import fs from "node:fs/promises";
+async function ready(page) {
+  await page.waitForFunction(
+    () => document.querySelector("#car-preview")?.dataset.ready === "true",
+  );
+}
 test("estúdio, garagem, placas, combinações e exportações", async ({
   page,
 }) => {
   const errors = [];
+  await fs.mkdir("screenshots/3d", { recursive: true });
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await page.evaluate(() => document.fonts.ready);
-  await expect(page.locator("#car-preview svg")).toHaveCount(2);
+  await expect(page.locator("#car-preview canvas")).toHaveCount(1);
+  await page.waitForFunction(
+    () => document.querySelector("#car-preview").dataset.ready === "true",
+  );
   await page.screenshot({
-    path: "screenshots/01-estudio-desktop.png",
+    path: "screenshots/3d/01-estudio-desktop.png",
     fullPage: true,
   });
   await page.locator("#save").click();
@@ -21,6 +30,7 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   for (const [body, color, text] of [
     ["sedan", "#6389b5", "BLUE 77"],
     ["hatch", "#87a996", "ECTO-1"],
+    ["coupe", "#df593e", "NRVOUS"],
     ["muscle", "#353e47", "OUTATIME"],
     ["wagon", "#f1b849", "ROAD\nTRIP"],
   ]) {
@@ -37,9 +47,16 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
       await page.locator('[data-key="spoiler"][data-value="sport"]').click();
     await page.locator('[data-tab="plate"]').click();
     await page.getByLabel("Texto da placa", { exact: true }).fill(text);
+    await ready(page);
     await page
       .locator(".stage")
-      .screenshot({ path: `screenshots/car-${body}.png` });
+      .screenshot({ path: `screenshots/3d/car-${body}.png` });
+    await page.locator('[data-view="rear"]').click();
+    await ready(page);
+    await page
+      .locator(".stage")
+      .screenshot({ path: `screenshots/3d/car-${body}-rear.png` });
+    await page.locator('[data-view="three-quarter"]').click();
   }
   await page
     .getByLabel("Texto da placa", { exact: true })
@@ -71,21 +88,22 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   await page.locator("summary").filter({ hasText: "Formato" }).click();
   await page.getByLabel("Largura", { exact: true }).fill("280");
   await page.getByLabel("Altura", { exact: true }).fill("130");
+  await ready(page);
   await page.screenshot({
-    path: "screenshots/02-editor-placa.png",
+    path: "screenshots/3d/02-editor-placa.png",
     fullPage: true,
   });
   await page.locator("#reset").click();
-  for (const kind of ["svg", "png", "icon"]) {
+  for (const kind of ["plate-svg", "png", "icon"]) {
     const pending = page.waitForEvent("download");
     await page.locator(`[data-export="${kind}"]`).click();
     const download = await pending;
     await download.saveAs(
-      `screenshots/export-${kind}.${kind === "svg" ? "svg" : "png"}`,
+      `screenshots/export-${kind}.${kind === "plate-svg" ? "svg" : "png"}`,
     );
     expect(await download.failure()).toBeNull();
   }
-  const svg = await fs.readFile("screenshots/export-svg.svg", "utf8");
+  const svg = await fs.readFile("screenshots/export-plate-svg.svg", "utf8");
   expect(svg).toContain("data:font");
   expect(svg).toContain("NRVOUS");
   await page.locator('[data-tab="parts"]').click();
@@ -97,9 +115,10 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   await page.locator('[data-tab="details"]').click();
   await page.getByText("Faixas de corrida", { exact: true }).click();
   await page.getByText("Adesivo de estrela", { exact: true }).click();
+  await ready(page);
   await page
     .locator(".stage")
-    .screenshot({ path: "screenshots/car-custom-sport.png" });
+    .screenshot({ path: "screenshots/3d/car-custom-sport.png" });
   await page.locator('[data-tab="plate"]').click();
   await page
     .locator('[data-key="plate.font"][data-value="Barlow Condensed"]')
@@ -115,14 +134,19 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('[data-tab="body"]').click();
-  await page.screenshot({ path: "screenshots/03-mobile.png", fullPage: true });
+  await ready(page);
+  await page.screenshot({
+    path: "screenshots/3d/03-mobile.png",
+    fullPage: true,
+  });
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
   await page.locator('[data-tab="plate"]').click();
   await page.getByLabel("Texto da placa", { exact: true }).fill("MOBILE 1");
+  await ready(page);
   await page.screenshot({
-    path: "screenshots/04-mobile-placa.png",
+    path: "screenshots/3d/04-mobile-placa.png",
     fullPage: true,
   });
   expect(errors).toEqual([]);

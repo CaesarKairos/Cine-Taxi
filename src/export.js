@@ -1,4 +1,5 @@
-import { car } from "./car.js";
+import { captureVehicle } from "./vehicle/renderer.js";
+import { plate } from "./plate.js";
 async function fontStyles(s) {
   let styles = "";
   for (const sheet of document.styleSheets) {
@@ -32,44 +33,23 @@ async function fontStyles(s) {
   }
   return styles;
 }
-export async function exportCar(s, kind, toast) {
+export async function exportCar(s, kind, toast, view = "three-quarter") {
   s = structuredClone(s);
   await document.fonts.ready;
-  toast("Preparando sua miniatura?");
-  const css = await fontStyles(s);
-  let svg = car(s, { shadow: false }).replace(
-    "<defs>",
-    `<defs><style>${css}</style>`,
-  );
-  if (kind === "svg") {
-    download(s, toast, new Blob([svg], { type: "image/svg+xml" }), "svg");
+  toast("Preparando sua miniatura…");
+  if (kind === "plate-svg") {
+    const css = await fontStyles(s);
+    const svg = plate(s.plate).replace("<defs>", `<defs><style>${css}</style>`);
+    download(s, toast, new Blob([svg], { type: "image/svg+xml" }), "placa.svg");
     return;
   }
-  let size = kind === "icon" ? 256 : 1600;
-  const url = URL.createObjectURL(
-    new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
-  );
-  try {
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = url;
-    });
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = kind === "icon" ? size : 1160;
-    const ctx = canvas.getContext("2d");
-    if (kind === "icon") {
-      ctx.drawImage(img, -35, -32, 326, 236);
-    } else ctx.drawImage(img, 0, 0, size, 1160);
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/png"),
-    );
-    download(s, toast, blob, kind === "icon" ? "icon.png" : "png");
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  const url = await captureVehicle(s, {
+    width: kind === "icon" ? 256 : 1600,
+    height: kind === "icon" ? 256 : 1160,
+    view,
+  });
+  const blob = await (await fetch(url)).blob();
+  download(s, toast, blob, kind === "icon" ? "icon.png" : "png");
 }
 function download(s, toast, blob, ext) {
   const url = URL.createObjectURL(blob),

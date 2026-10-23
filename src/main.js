@@ -1,4 +1,4 @@
-﻿import "@fontsource/space-grotesk/latin-400.css";
+import "@fontsource/space-grotesk/latin-400.css";
 import "@fontsource/space-grotesk/latin-500.css";
 import "@fontsource/space-grotesk/latin-700.css";
 import "@fontsource/bebas-neue/latin-400.css";
@@ -10,8 +10,14 @@ import "@fontsource/barlow-condensed/latin-800.css";
 import "@fontsource/barlow-condensed/latin-900.css";
 import "@fontsource/anton/latin-400.css";
 import "./style.css";
-import { initial, bodies, colors, clone } from "./state.js";
-import { car } from "./car.js";
+import {
+  initial,
+  bodies,
+  colors,
+  clone,
+  normalizeConfiguration,
+} from "./state.js";
+import { VehicleStudio, captureVehicle } from "./vehicle/renderer.js";
 import { exportCar } from "./export.js";
 import { plate, esc } from "./plate.js";
 let s = clone(initial),
@@ -20,6 +26,9 @@ let s = clone(initial),
 try {
   saved = JSON.parse(localStorage.getItem("mini-motor-garage") || "[]");
   if (!Array.isArray(saved)) saved = [];
+  saved = saved
+    .filter((x) => x && x.config)
+    .map((x) => ({ ...x, config: normalizeConfiguration(x.config) }));
 } catch {}
 const icons = { body: "▱", paint: "◒", parts: "⚒", plate: "▤", details: "✦" };
 const tabs = {
@@ -30,7 +39,7 @@ const tabs = {
   details: "Detalhes",
 };
 const app = document.querySelector("#app");
-app.innerHTML = `<header><a class="brand" href="./" aria-label="Mini Motor início"><span class="brand-mark">m<span>m</span></span>mini motor<span class="brand-dot">®</span></a><div class="header-center">PEQUENOS CARROS. GRANDES PERSONALIDADES.</div><button class="garage-button" id="garage">▱ <span>Minha garagem</span><b id="saved-count">${saved.length}</b></button></header><main><div class="page-intro"><div><div class="eyebrow"><i></i> ESTÚDIO DE CUSTOMIZAÇÃO</div><h1>Seu próximo <em>pequeno</em> ícone.</h1><p>Uma carroceria. Infinitas histórias. Faça do seu jeito.</p></div><div class="edition">FEITO PARA INVENTAR<br><strong>VOL. 001 / ORIGINALS</strong></div></div><div class="studio"><section class="stage" aria-label="Preview do carro"><div class="stage-top"><span class="pill"><i></i> AO VIVO NA SUA GARAGEM</span><button id="reset" class="quiet">↺ <span>Recomeçar</span></button></div><div class="stage-watermark">ORIGINALS</div><div id="car-preview"></div><div class="stage-caption"><span id="model-code">MM—03</span><div><h2 id="model-name">O seu cupê.</h2><span>1:24 DE PURA PERSONALIDADE</span></div><span class="rear-label">↗ VISTA TRASEIRA ¾</span></div><div class="stage-bottom"><div class="color-info"><span id="color-dot"></span><div><b id="color-name">Coral de garagem</b><small id="finish-name">Acabamento brilhante</small></div></div><button id="random" class="random">⚄ Surpreenda-me</button></div><span class="stage-corner">DESIGNED BY YOU, BUILT FOR FUN.</span></section><aside class="editor"><div class="editor-heading"><div><span class="eyebrow">A SUA ASSINATURA</span><h2>Hora de dar personalidade.</h2></div><span class="editor-star">✳</span></div><nav id="tabs" aria-label="Categorias">${Object.entries(
+app.innerHTML = `<header><a class="brand" href="./" aria-label="Mini Motor início"><span class="brand-mark">m<span>m</span></span>mini motor<span class="brand-dot">®</span></a><div class="header-center">PEQUENOS CARROS. GRANDES PERSONALIDADES.</div><button class="garage-button" id="garage">▱ <span>Minha garagem</span><b id="saved-count">${saved.length}</b></button></header><main><div class="page-intro"><div><div class="eyebrow"><i></i> ESTÚDIO DE CUSTOMIZAÇÃO</div><h1>Seu próximo <em>pequeno</em> ícone.</h1><p>Uma carroceria. Infinitas histórias. Faça do seu jeito.</p></div><div class="edition">FEITO PARA INVENTAR<br><strong>VOL. 001 / ORIGINALS</strong></div></div><div class="studio"><section class="stage" aria-label="Preview do carro"><div class="stage-top"><span class="pill"><i></i> AO VIVO NA SUA GARAGEM</span><button id="reset" class="quiet">↺ <span>Recomeçar</span></button></div><div class="stage-watermark">ORIGINALS</div><div id="car-preview"></div><div class="stage-caption"><span id="model-code">MM—03</span><div><h2 id="model-name">O seu cupê.</h2><span>1:24 DE PURA PERSONALIDADE</span></div><div class="view-switch" aria-label="Ângulo do carro"><button data-view="rear" aria-pressed="false">Traseira</button><button data-view="three-quarter" aria-pressed="true">&#190;</button></div></div><div class="stage-bottom"><div class="color-info"><span id="color-dot"></span><div><b id="color-name">Coral de garagem</b><small id="finish-name">Acabamento brilhante</small></div></div><button id="random" class="random">⚄ Surpreenda-me</button></div><span class="stage-corner">DESIGNED BY YOU, BUILT FOR FUN.</span></section><aside class="editor"><div class="editor-heading"><div><span class="eyebrow">A SUA ASSINATURA</span><h2>Hora de dar personalidade.</h2></div><span class="editor-star">✳</span></div><nav id="tabs" aria-label="Categorias">${Object.entries(
   tabs,
 )
   .map(
@@ -39,7 +48,7 @@ app.innerHTML = `<header><a class="brand" href="./" aria-label="Mini Motor iníc
   )
   .join(
     "",
-  )}</nav><div id="controls"></div><div class="editor-foot"><span><i></i> Cada detalhe é seu.</span><span>SEM REGRAS. SÓ ESTILO.</span></div></aside></div><section class="collection-strip"><div class="mini-icon" id="mini-icon"></div><div class="collection-copy"><span class="eyebrow">DA SUA GARAGEM PARA O MUNDO</span><h3>Pequeno no tamanho. <br>Enorme na personalidade.</h3><p>Guarde sua criação ou leve seu novo ícone com você.</p></div><div class="export-actions"><button id="save" class="primary">＋ Salvar na garagem</button><div><button data-export="png">↓ PNG</button><button data-export="svg">↓ SVG</button><button data-export="icon">↓ Ícone</button></div><small>PNG transparente · SVG vetorial · Ícone 256 px</small></div></section><footer><span>mini motor® <span class="muted">/ O SEU ESTÚDIO DE GARAGEM</span></span><span>Feito para quem nunca deixou de brincar. ↗</span></footer></main><div id="toast" role="status"></div><dialog id="garage-dialog"><div class="dialog-head"><div><span class="eyebrow">SUA COLEÇÃO PARTICULAR</span><h2>Minha garagem</h2></div><button id="close-garage" aria-label="Fechar garagem">✕</button></div><div id="garage-list"></div></dialog>`;
+  )}</nav><div id="controls"></div><div class="editor-foot"><span><i></i> Cada detalhe é seu.</span><span>SEM REGRAS. SÓ ESTILO.</span></div></aside></div><section class="collection-strip"><div class="mini-icon" id="mini-icon"></div><div class="collection-copy"><span class="eyebrow">DA SUA GARAGEM PARA O MUNDO</span><h3>Pequeno no tamanho. <br>Enorme na personalidade.</h3><p>Guarde sua criação ou leve seu novo ícone com você.</p></div><div class="export-actions"><button id="save" class="primary">＋ Salvar na garagem</button><div><button data-export="png">↓ PNG</button><button data-export="plate-svg">↓ Placa SVG</button><button data-export="icon">↓ Ícone</button></div><small>Carro PNG · Placa SVG vetorial · Ícone 256 px</small></div></section><footer><span>mini motor® <span class="muted">/ O SEU ESTÚDIO DE GARAGEM</span></span><span>Feito para quem nunca deixou de brincar. ↗</span></footer></main><div id="toast" role="status"></div><dialog id="garage-dialog"><div class="dialog-head"><div><span class="eyebrow">SUA COLEÇÃO PARTICULAR</span><h2>Minha garagem</h2></div><button id="close-garage" aria-label="Fechar garagem">✕</button></div><div id="garage-list"></div></dialog>`;
 const choices = (key, items) =>
   `<div class="choices">${items.map(([value, label, art]) => `<button data-key="${key}" data-value="${value}" class="choice ${get(key) === value ? "selected" : ""}"><span class="choice-art">${art || label}</span><span>${label}</span>${get(key) === value ? "<i>✓</i>" : ""}</button>`).join("")}</div>`;
 function get(key) {
@@ -55,9 +64,42 @@ const color = (key, label) =>
   `<label class="color-field"><span>${label}</span><span class="color-chip" style="background:${get(key)}"><input aria-label="${label}" type="color" data-input="${key}" value="${get(key)}"/></span><small>${get(key).toUpperCase()}</small></label>`;
 const toggle = (key, label) =>
   `<label class="toggle">${label}<input type="checkbox" data-input="${key}" ${get(key) ? "checked" : ""}/><span></span></label>`;
+const thumbnails = new Map();
+let studio;
+try {
+  studio = new VehicleStudio(document.querySelector("#car-preview"));
+} catch (error) {
+  document.querySelector("#car-preview").innerHTML =
+    '<p class="render-error">Seu navegador precisa de WebGL 2 para abrir o estúdio 3D. Ative a aceleração gráfica ou use um navegador compatível.</p>';
+  console.error(error);
+}
 function tinyBody(id) {
-  let b = bodies[id];
-  return `<svg viewBox="0 0 100 58"><path d="M12 35L26 ${id === "hatch" || id === "wagon" ? 12 : 22}L65 ${id === "coupe" ? 17 : 13}L82 31L88 35V46H10V35Z" fill="currentColor"/><path d="M30 24L35 18H60L70 28Z" fill="#f7f3e9" opacity=".65"/><circle cx="27" cy="46" r="8" fill="#343d40"/><circle cx="73" cy="46" r="8" fill="#343d40"/><circle cx="27" cy="46" r="3" fill="#e6ddca"/><circle cx="73" cy="46" r="3" fill="#e6ddca"/><path d="M12 35h9" stroke="#ffe4b7" stroke-width="4"/></svg>`;
+  return thumbnails.has(id)
+    ? `<img src="${thumbnails.get(id)}" alt="Miniatura 3D ${bodies[id].name}"/>`
+    : '<span class="thumbnail-loading" aria-label="Preparando miniatura">···</span>';
+}
+let renderRevision = 0;
+function updateMiniature() {
+  if (!studio?.engine.model) return;
+  const source = studio.canvas,
+    canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 256;
+  const side = Math.max(source.height, source.width * 0.72);
+  canvas
+    .getContext("2d")
+    .drawImage(
+      source,
+      (source.width - side) / 2,
+      (source.height - side) / 2,
+      side,
+      side,
+      0,
+      0,
+      256,
+      256,
+    );
+  document.querySelector("#mini-icon").innerHTML =
+    `<img src="${canvas.toDataURL()}" alt="Ícone da sua miniatura"/>`;
 }
 function controls() {
   let html = "";
@@ -158,19 +200,31 @@ function palette() {
   return `<div class="palette">${colors.map((c, i) => `<button aria-label="Cor ${["coral", "mostarda", "sálvia", "azul", "lavanda", "creme", "grafite", "rosa"][i]}" title="${c}" style="--swatch:${c}" data-key="color" data-value="${c}" class="${s.color === c ? "picked" : ""}">${s.color === c ? "✓" : ""}</button>`).join("")}</div>`;
 }
 function render(animate = false) {
-  document.querySelector("#car-preview").innerHTML = car(s);
-  if (animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.querySelector("#car-preview > svg").animate(
-      [
-        { opacity: 0.5, transform: "translateY(3px)" },
-        { opacity: 1, transform: "translateY(0)" },
-      ],
-      { duration: 180, easing: "ease-out" },
-    );
-  }
-  document.querySelector("#mini-icon").innerHTML = car(s, { shadow: false });
+  const revision = ++renderRevision;
+  const snapshot = clone(s);
+  studio
+    ?.update(snapshot)
+    .then((accepted) => {
+      if (accepted && revision === renderRevision) {
+        updateMiniature();
+        const preview = document.querySelector("#plate-preview");
+        if (preview) preview.innerHTML = plate(snapshot.plate);
+      }
+      if (
+        accepted &&
+        animate &&
+        !matchMedia("(prefers-reduced-motion: reduce)").matches
+      )
+        studio.canvas.animate([{ opacity: 0.65 }, { opacity: 1 }], {
+          duration: 140,
+        });
+    })
+    .catch((error) => {
+      toast("Não foi possível renderizar o veículo.");
+      console.error(error);
+    });
   document.querySelector("#model-name").textContent =
-    `O seu ${bodies[s.body].name.toLowerCase()}.`;
+    `${s.body==='wagon'?'A sua':'O seu'} ${bodies[s.body].name.toLowerCase()}.`;
   document.querySelector("#model-code").textContent =
     `MM—0${Object.keys(bodies).indexOf(s.body) + 1}`;
   document.querySelector("#color-dot").style.background = s.color;
@@ -207,6 +261,13 @@ function switchTab(id) {
 app.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
+  if (t.dataset.view) {
+    studio?.setView(t.dataset.view);
+    document
+      .querySelectorAll("[data-view]")
+      .forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
+    updateMiniature();
+  }
   if (t.dataset.tab) switchTab(t.dataset.tab);
   if (t.dataset.goto) switchTab(t.dataset.goto);
   if (t.dataset.key) {
@@ -313,7 +374,9 @@ app.addEventListener("click", (e) => {
   if (t.id === "garage") openGarage();
   if (t.id === "close-garage") document.querySelector("#garage-dialog").close();
   if (t.dataset.restore) {
-    s = clone(saved.find((x) => x.id === Number(t.dataset.restore)).config);
+    s = normalizeConfiguration(
+      saved.find((x) => x.id === Number(t.dataset.restore)).config,
+    );
     render();
     controls();
     document.querySelector("#garage-dialog").close();
@@ -326,7 +389,7 @@ app.addEventListener("click", (e) => {
     openGarage();
   }
   if (t.dataset.export)
-    exportCar(s, t.dataset.export, toast).catch((err) => {
+    exportCar(s, t.dataset.export, toast, studio?.engine.view).catch((err) => {
       console.error(err);
       toast("Não foi possível exportar. Tente novamente.");
     });
@@ -351,13 +414,36 @@ function openGarage() {
     ? saved
         .map(
           (x) =>
-            `<article class="saved-car"><div>${car(x.config, { shadow: false })}</div><h3>${esc(x.name)}</h3><button class="primary" data-restore="${x.id}">Abrir no estúdio ↗</button><button class="quiet" data-delete="${x.id}">Excluir</button></article>`,
+            `<article class="saved-car"><div data-garage-preview="${x.id}"></div><h3>${esc(x.name)}</h3><button class="primary" data-restore="${x.id}">Abrir no estúdio ↗</button><button class="quiet" data-delete="${x.id}">Excluir</button></article>`,
         )
         .join("")
     : '<div class="empty-garage">▱<h3>Sua coleção começa aqui.</h3><p>Salve uma miniatura para encontrá-la de novo.</p></div>';
+  for (const item of saved) {
+    const el = document.querySelector(`[data-garage-preview="${item.id}"]`);
+    captureVehicle(item.config, { width: 400, height: 270 })
+      .then((url) => {
+        if (el?.isConnected)
+          el.innerHTML = `<img src="${url}" alt="${esc(item.name)}"/>`;
+      })
+      .catch(console.error);
+  }
   let d = document.querySelector("#garage-dialog");
   if (!d.open) d.showModal();
 }
 controls();
 render();
-document.fonts.ready.then(render);
+document.fonts.ready.then(async () => {
+  if (!studio) return;
+  render();
+  for (const id of Object.keys(bodies)) {
+    thumbnails.set(
+      id,
+      await captureVehicle(
+        { ...clone(initial), body: id, color: "#8b9d90" },
+        { width: 220, height: 140 },
+      ),
+    );
+  }
+  if (tab === "body") controls();
+});
+window.addEventListener("pagehide", () => studio?.dispose());
