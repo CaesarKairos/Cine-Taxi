@@ -1255,3 +1255,31 @@ dialog::backdrop {
     grid-template-columns: 1fr;
   }
 }
+
+.family-tabs {
+  display: flex;
+  gap: 5px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.family-tabs button {
+  border: 1px solid #dce1d2;
+  border-radius: 20px;
+  padding: 7px 10px;
+  font-size: 10px;
+  background: #fafaf3;
+  color: #6c7869;
+}
+.family-tabs button[aria-pressed="true"] {
+  background: #293a37;
+  color: #fff9e9;
+  border-color: #293a37;
+}
+.catalog-grid {
+  max-height: 285px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 4px 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #b5bfac transparent;
+}

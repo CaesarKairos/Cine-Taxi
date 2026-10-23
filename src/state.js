@@ -16,6 +16,9 @@ export const initial = {
   stripes: false,
   trim: true,
   sticker: false,
+  rack: false,
+  spare: false,
+  bedCover: "open",
   plate: {
     text: "NRVOUS",
     style: "california",
@@ -36,14 +39,29 @@ export const initial = {
     band: "top",
   },
 };
+export const families = {
+  all: "Todos",
+  classic: "Clássicos",
+  sport: "Esportivos",
+  utility: "Utilitários",
+};
 export const bodies = {
-  sedan: { name: "Sedã", tag: "O clássico" },
-  hatch: { name: "Hatch", tag: "Pequeno rebelde" },
-  coupe: { name: "Cupê", tag: "Alma esportiva" },
-  muscle: { name: "Muscle", tag: "Pura presença" },
-  wagon: { name: "Perua", tag: "Mais histórias" },
-  roadster: { name: "Roadster", tag: "California · 1961" },
-  convertible: { name: "Conversível", tag: "Céu aberto" },
+  sedan: { family: "classic", name: "Sedã", tag: "O clássico" },
+  hatch: { family: "classic", name: "Hatch", tag: "Pequeno rebelde" },
+  coupe: { family: "sport", name: "Cupê", tag: "Alma esportiva" },
+  muscle: { family: "sport", name: "Muscle", tag: "Pura presença" },
+  wagon: { family: "utility", name: "Perua", tag: "Mais histórias" },
+  roadster: { family: "classic", name: "Roadster", tag: "California · 1961" },
+  convertible: { family: "sport", name: "Conversível", tag: "Céu aberto" },
+  van: { family: "utility", name: "Van retrô", tag: "Boas vibrações" },
+  pickup: { family: "utility", name: "Picape", tag: "Estrada de terra" },
+  offroad: { family: "utility", name: "Jipe", tag: "Fora do asfalto" },
+  wedge: { family: "sport", name: "Futurista", tag: "Próxima dimensão" },
+  retro: {
+    family: "classic",
+    name: "Compacto retrô",
+    tag: "Pequeno companheiro",
+  },
 };
 export function normalizeConfiguration(value = {}) {
   const config = {
@@ -54,6 +72,15 @@ export function normalizeConfiguration(value = {}) {
   if (!bodies[config.body]) config.body = initial.body;
   const roofs = models[config.body].roofs || ["fixed"];
   if (!roofs.includes(config.roof)) config.roof = roofs[0];
+  const a = models[config.body];
+  if (!a.rack) config.rack = false;
+  if (!a.spare) config.spare = false;
+  if (!a.bedCover?.includes(config.bedCover)) config.bedCover = "open";
+  if (a.lights && !a.lights.includes(config.lights))
+    config.lights = a.lights[0];
+  if (a.spoiler === false) config.spoiler = "none";
+  if (!(a.finishes || ["gloss", "matte"]).includes(config.finish))
+    config.finish = "gloss";
   return config;
 }
 export const colors = [

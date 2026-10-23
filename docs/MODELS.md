@@ -27,6 +27,8 @@ Os frisos encontram as faces da carroceria por interseção de raios em espaço 
 
 ## Conversão reproduzível
 
+A expansão para 12 modelos acrescenta van, picape, jipe, esportivo em cunha e compacto arredondado como geometrias originais. Não há novos GLBs a preparar nem alteração dos cinco derivados Kenney. Veja [CATALOG.md](CATALOG.md) para referências, autoria e capacidades. As tabelas anteriores registram a origem histórica das bases.
+
 Roadster e conversível moderno são carrocerias originais geradas por `src/vehicle/convertibles.js`. Não utilizam doadores, não exigem conversão GLB e não alteram os cinco arquivos de malha existentes. A autoria, os interiores, as capacidades de capota e os modelos ainda pendentes estão em [CONVERTIBLES.md](CONVERTIBLES.md).
 
 Baixe e extraia o arquivo acima. A preparação requer Python com Pillow, somente durante a autoria:

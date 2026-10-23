@@ -3,6 +3,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { buildVehicle } from "../car.js";
 import { disposeGroup } from "./geometry.js";
 import { refreshPlate } from "./parts.js";
+import { models } from "./models.js";
 
 function lighting(renderer) {
   const scene = new THREE.Scene();
@@ -98,7 +99,11 @@ class Engine {
     this.floor.visible = this.shadow.visible = !transparent;
     const bounds = new THREE.Box3().setFromObject(this.model),
       center = bounds.getCenter(new THREE.Vector3());
-    const openCabin = this.model.userData.configuration.roof === "open";
+    const configuration = this.model.userData.configuration;
+    const openCabin =
+      configuration.roof === "open" ||
+      (models[configuration.body].bedCover &&
+        configuration.bedCover === "open");
     const offset =
       view === "rear"
         ? new THREE.Vector3(0, openCabin ? 2.9 : 2.3, -10)

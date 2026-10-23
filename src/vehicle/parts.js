@@ -88,31 +88,33 @@ export function rearParts(group, a, s, m) {
   group.add(rear);
   // Close the donor bumper cutout with a continuous painted return. This joins
   // the lamp panel to the new bumper instead of exposing the old internal faces.
-  rear.add(
-    box(
-      [a.width * 0.94, a.lightY - a.bumperY - 0.02, 0.12],
-      [0, (a.lightY + a.bumperY) / 2, 0.029],
-      m.paint,
-      0.025,
-      "rear-body-return",
-    ),
-  );
-  rear.add(
-    box(
-      [a.width * 0.94, 0.235, 0.046],
-      [0, a.lightY - 0.025, -0.016],
-      s.body === "muscle" ? m.dark : m.paint,
-      0.026,
-      "rear-fascia",
-    ),
-  );
+  if (!a.roundRear)
+    rear.add(
+      box(
+        [a.width * 0.94, a.lightY - a.bumperY - 0.02, 0.12],
+        [0, (a.lightY + a.bumperY) / 2, 0.029],
+        m.paint,
+        0.025,
+        "rear-body-return",
+      ),
+    );
+  if (!a.roundRear)
+    rear.add(
+      box(
+        [a.width * 0.94, 0.235, 0.046],
+        [0, a.lightY - 0.025, -0.016],
+        s.body === "muscle" ? m.dark : m.paint,
+        0.026,
+        "rear-fascia",
+      ),
+    );
   for (const side of [-1, 1]) {
     const x = side * a.width * 0.364;
     const cluster = new THREE.Group();
     cluster.name = "taillight";
-    cluster.position.set(x, a.lightY, -0.047);
+    cluster.position.set(x, a.lightY, a.lightZ ?? -0.047);
     if (s.lights === "round") {
-      for (const offset of s.body === "roadster" ? [0] : [-0.071, 0.071]) {
+      for (const offset of a.singleRound ? [0] : [-0.071, 0.071]) {
         const bezel = cylinder(0.063, 0.032, m.chrome);
         bezel.position.x = offset;
         cluster.add(bezel);
@@ -274,7 +276,7 @@ export function rearParts(group, a, s, m) {
 }
 
 export function accessories(group, a, s, m) {
-  if (s.spoiler !== "none") {
+  if (a.spoiler !== false && s.spoiler !== "none") {
     const high = s.body === "hatch" || s.body === "wagon";
     const baseY = high ? a.roof - 0.03 : (a.spoilerY ?? a.deck);
     const z = high ? a.glassCenter[2] + 0.035 : a.spoilerZ;

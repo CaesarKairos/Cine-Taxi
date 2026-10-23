@@ -25,7 +25,9 @@ Abra o endereço informado pelo Vite. `npm run build` gera `dist/`; `npm run pre
 
 ## Renderizador 3D
 
-- Sete modelos: sedã, hatch, cupê, muscle, perua, roadster clássico e conversível moderno.
+- Doze modelos: sedã, hatch, cupê, muscle, perua, roadster clássico, conversível moderno, van retrô, picape clássica, jipe, esportivo futurista e compacto retrô.
+- Famílias visuais **Clássicos / Esportivos / Utilitários**, com miniaturas 3D e grade de altura limitada.
+- Van com teto bicolor e bagageiro; picape com caçamba aberta, lona ou capota; jipe elevado com estepe e bagageiro; esportivo com acabamento em aço; compacto com teto curvo e para-lamas arredondados.
 - Roadster e conversível têm carrocerias próprias, habitáculo aberto com bancos, painel, volante e forros de porta. A seleção de capota aberta/fechada e a cor do interior aparecem somente nos modelos compatíveis.
 - Chassis adaptados de malhas Kenney; hatch, muscle e perua recebem cabines próprias.
 - Rodas tridimensionais, eixos, caixas de roda das malhas, para-choques com volume, lanternas, escapamentos, aerofólios e detalhes montados em coordenadas locais de cada carroceria.
@@ -34,6 +36,16 @@ Abra o endereço informado pelo Vite. `npm run build` gera `dist/`; `npm run pre
 - Miniaturas de seleção e da garagem renderizadas pelos próprios modelos 3D.
 
 O render acontece sob demanda, sem loop de animação contínuo. Há um contexto WebGL para o preview e outro reutilizado por miniaturas/exportações. Malhas, materiais e texturas substituídos são liberados. As cinco malhas base somam aproximadamente 214 KB, antes da compressão HTTP.
+
+### Uma coleção com 12 personalidades
+
+![Os 12 carros do Mini Motor, exportados nas vistas traseira e traseira ¾](screenshots/catalog/collection-12.png)
+
+| Van retrô com bagageiro | Picape com capota | Jipe com estepe e bagageiro |
+| :---: | :---: | :---: |
+| <img src="screenshots/catalog/van-rack-three-quarter.png" alt="Van bicolor com bagageiro instalado no teto e placa MYSTERY" width="280"> | <img src="screenshots/catalog/pickup-canopy-three-quarter.png" alt="Picape azul com cobertura envidraçada na caçamba" width="280"> | <img src="screenshots/catalog/offroad-equipped-three-quarter.png" alt="Jipe verde com estepe acima da placa e bagageiro no teto" width="280"> |
+
+*Imagens produzidas pelo próprio customizador. A placa, os materiais e os acessórios usam a mesma configuração do preview.*
 
 ## Placas e exportação
 
@@ -65,6 +77,7 @@ As configurações continuam no `localStorage`, na chave original `mini-motor-ga
 | `src/vehicle/models.js`         | Medidas e pontos de montagem de cada modelo                      |
 | `src/vehicle/cabins.js`         | Cabines e janelas do hatch e da perua                            |
 | `src/vehicle/convertibles.js`   | Carrocerias abertas, interiores e capotas de autoria própria     |
+| `src/vehicle/catalog.js`        | Cinco carrocerias novas, caçamba, estepe e bagageiros             |
 | `src/vehicle/parts.js`          | Rodas, lanternas, para-choques, placa e acessórios               |
 | `src/vehicle/geometry.js`       | Primitivas e liberação de recursos                               |
 | `src/materials.js`              | Materiais físicos                                                |
@@ -77,6 +90,8 @@ As configurações continuam no `localStorage`, na chave original `mini-motor-ga
 ## Origem e licenças
 
 As bases vêm do [Car Kit 3.1, de Kenney](https://kenney.nl/assets/car-kit), distribuído em **CC0**. Materiais, peças e montagem foram adaptados, e três cabines foram reconstruídas. Detalhes por modelo, hash do arquivo de origem e procedimento de conversão estão em [docs/MODELS.md](docs/MODELS.md). A licença original está em `licenses/Kenney-Car-Kit.txt`.
+
+Roadster, conversível e as cinco carrocerias desta expansão são geometria original do projeto. Não acrescentam modelos externos nem downloads durante o uso. Referências, capacidades e construção estão em [docs/CATALOG.md](docs/CATALOG.md).
 
 Three.js usa MIT (`licenses/Three-MIT.txt`). Bebas Neue, Barlow Condensed, Anton e Space Grotesk são distribuídas localmente sob SIL Open Font License 1.1; suas licenças também estão em `licenses/`. Barlow Condensed oferece pesos reais de 400 a 900. Os presets de placa são interpretações visuais e não reproduções normativas oficiais.
 
@@ -104,3 +119,13 @@ node scripts/inspect-convertibles.mjs
 ```
 
 O script usa `http://127.0.0.1:5173` por padrão; `STUDIO_URL` permite outro endereço. Os resultados ficam em `screenshots/convertibles/`. A decisão de escopo, os modelos pendentes e a geometria dos interiores estão em [docs/CONVERTIBLES.md](docs/CONVERTIBLES.md).
+
+Para gerar a galeria atual dos **12 carros**, nos dois ângulos, e os exemplos de acessórios:
+
+```sh
+node scripts/inspect-catalog.mjs
+node scripts/inspect-catalog-options.mjs
+node scripts/gallery-catalog.mjs
+```
+
+As capturas ficam em `screenshots/catalog/`. Os testes incluem caçamba aberta, capacidades incompatíveis, restauração da garagem, demonstração inicial e obstrução da placa com acessórios instalados. A documentação histórica dos sete modelos anteriores foi preservada.

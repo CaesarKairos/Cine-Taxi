@@ -13,6 +13,7 @@ import "./style.css";
 import {
   initial,
   bodies,
+  families,
   colors,
   clone,
   normalizeConfiguration,
@@ -23,6 +24,7 @@ import { exportCar } from "./export.js";
 import { plate, esc } from "./plate.js";
 let s = clone(initial),
   tab = "body",
+  family = "all",
   saved = [];
 try {
   saved = JSON.parse(localStorage.getItem("mini-motor-garage") || "[]");
@@ -58,7 +60,7 @@ function get(key) {
 function set(key, value) {
   if (key.startsWith("plate.")) s.plate[key.slice(6)] = value;
   else s[key] = value;
-  if (key === "body" || key === "roof") s = normalizeConfiguration(s);
+  s = normalizeConfiguration(s);
 }
 const range = (key, label, min, max, step = 1) =>
   `<label class="range-label">${label}<output>${get(key)}</output><input aria-label="${label}" type="range" data-input="${key}" min="${min}" max="${max}" step="${step}" value="${get(key)}"/></label>`;
@@ -106,22 +108,33 @@ function updateMiniature() {
 function controls() {
   let html = "";
   if (tab === "body")
-    html = `<div class="section-label"><h3>Escolha sua carroceria</h3><span>${String(Object.keys(bodies).indexOf(s.body) + 1).padStart(2, "0")} / ${String(Object.keys(bodies).length).padStart(2, "0")}</span></div><p class="helper">Toda grande ideia começa com uma boa silhueta.</p><div class="body-grid">${Object.entries(
+    html = `<div class="section-label"><h3>Escolha sua carroceria</h3><span>${String(Object.keys(bodies).indexOf(s.body) + 1).padStart(2, "0")} / ${String(Object.keys(bodies).length).padStart(2, "0")}</span></div><p class="helper">Toda grande ideia começa com uma boa silhueta.</p><div class="family-tabs" aria-label="Famílias de carroceria">${Object.entries(
+      families,
+    )
+      .map(
+        ([id, label]) =>
+          `<button data-family="${id}" aria-pressed="${family === id}">${label}</button>`,
+      )
+      .join("")}</div><div class="body-grid catalog-grid">${Object.entries(
       bodies,
     )
+      .filter(([id, b]) => family === "all" || b.family === family)
       .map(
         ([id, b]) =>
           `<button data-key="body" data-value="${id}" class="body-card ${s.body === id ? "selected" : ""}"><span class="body-art">${tinyBody(id)}</span><b>${b.name}</b><small>${b.tag}</small>${s.body === id ? "<i>✓</i>" : ""}</button>`,
       )
       .join(
         "",
-      )}</div>${roofControls()}<div class="note"><span>↗</span><p>Cada carroceria tem suas próprias proporções.<br>As suas peças encontram o lugar certo.</p></div><div class="section-label"><h3>Uma cor para começar</h3><button class="text-button" data-goto="paint">Explorar pintura ↗</button></div>${palette()}<div class="tip"><span>✦</span> A placa conta a história. O carro dá o tom.</div>`;
+      )}</div>${vehicleControls()}${roofControls()}<div class="note"><span>↗</span><p>Cada carroceria tem suas próprias proporções.<br>As suas peças encontram o lugar certo.</p></div><div class="section-label"><h3>Uma cor para começar</h3><button class="text-button" data-goto="paint">Explorar pintura ↗</button></div>${palette()}<div class="tip"><span>✦</span> A placa conta a história. O carro dá o tom.</div>`;
   if (tab === "paint")
     html = `<h3>A cor da sua personalidade</h3><p class="helper">O clássico ou o inesperado? Você decide.</p>${palette()}${color("color", "Cor principal")}${color("secondary", "Cor secundária")}<h3 class="spaced">Acabamento</h3>${choices(
       "finish",
       [
         ["gloss", "Brilhante", "✧"],
         ["matte", "Fosco", "●"],
+        ...(models[s.body].finishes?.includes("steel")
+          ? [["steel", "Aço", "▨"]]
+          : []),
       ],
     )}<div class="note"><span>◒</span><p>A luz e as sombras mantêm a profundidade em qualquer cor.</p></div>`;
   if (tab === "parts")
@@ -129,17 +142,26 @@ function controls() {
       ["chrome", "Cromado", "━━━━"],
       ["painted", "Colorido", "▰"],
       ["sport", "Esportivo", "▱▱"],
-    ])}<h3 class="spaced">Lanternas</h3>${choices("lights", [
-      ["round", "Retrô", "● ●"],
-      ["rect", "Clássicas", "▰ ▰"],
-      ["bar", "Horizontais", "━━"],
-      ["vertical", "Verticais", "▮ ▮"],
-    ])}<h3 class="spaced">Aerofólio</h3>${choices("spoiler", [
-      ["none", "Sem", "—"],
-      ["lip", "Discreto", "▁"],
-      ["sport", "Esportivo", "┯━┯"],
-      ["wild", "Exagerado", "┳━┳"],
-    ])}<h3 class="spaced">Escapamento</h3>${choices("exhaust", [
+    ])}<h3 class="spaced">Lanternas</h3>${choices(
+      "lights",
+      [
+        ["round", "Retrô", "● ●"],
+        ["rect", "Clássicas", "▰ ▰"],
+        ["bar", "Horizontais", "━━"],
+        ["vertical", "Verticais", "▮ ▮"],
+      ].filter(
+        ([id]) => !models[s.body].lights || models[s.body].lights.includes(id),
+      ),
+    )}${
+      models[s.body].spoiler === false
+        ? ""
+        : `<h3 class="spaced">Aerofólio</h3>${choices("spoiler", [
+            ["none", "Sem", "—"],
+            ["lip", "Discreto", "▁"],
+            ["sport", "Esportivo", "┯━┯"],
+            ["wild", "Exagerado", "┳━┳"],
+          ])}`
+    }<h3 class="spaced">Escapamento</h3>${choices("exhaust", [
       ["single", "Simples", "◉"],
       ["dual", "Duplo", "◉　◉"],
       ["center", "Central", "⊙"],
@@ -201,6 +223,22 @@ function controls() {
     )}<p class="helper">As dimensões são proporcionais. Placas maiores são acomodadas no suporte sem distorcer o texto.</p></details>`;
   document.querySelector("#controls").innerHTML = html;
 }
+function vehicleControls() {
+  const a = models[s.body];
+  let html = "";
+  if (a.rack || a.spare || a.bedCover)
+    html += '<h3 class="spaced">Pronto para a próxima história</h3>';
+  if (a.rack) html += toggle("rack", "Bagageiro no teto");
+  if (a.spare) html += toggle("spare", "Estepe externo");
+  if (a.bedCover)
+    html += choices("bedCover", [
+      ["open", "Aberta", "⊔"],
+      ["flat", "Lona", "▔"],
+      ["canopy", "Capota", "⌒"],
+    ]);
+  if (a.roofColor) html += color("secondary", "Cor do teto e faixa");
+  return html;
+}
 function roofControls() {
   if (!models[s.body].roofs) return "";
   return `<h3 class="spaced">Capota</h3>${choices("roof", [
@@ -253,7 +291,7 @@ function render(animate = false) {
       "#d98f9b": "Rosa antigo",
     }[s.color] || s.color.toUpperCase();
   document.querySelector("#finish-name").textContent =
-    `Acabamento ${s.finish === "gloss" ? "brilhante" : "fosco"}`;
+    `Acabamento ${s.finish === "steel" ? "aço escovado" : s.finish === "gloss" ? "brilhante" : "fosco"}`;
   let p = document.querySelector("#plate-preview");
   if (p) p.innerHTML = plate(s.plate);
 }
@@ -280,6 +318,10 @@ app.addEventListener("click", (e) => {
       .querySelectorAll("[data-view]")
       .forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
     updateMiniature();
+  }
+  if (t.dataset.family) {
+    family = t.dataset.family;
+    controls();
   }
   if (t.dataset.tab) switchTab(t.dataset.tab);
   if (t.dataset.goto) switchTab(t.dataset.goto);
@@ -360,12 +402,15 @@ app.addEventListener("click", (e) => {
       "MINI 01",
       "WILD ONE",
     ]);
+    s = normalizeConfiguration(s);
+    family = "all";
     render();
     controls();
     toast("Uma nova personalidade na garagem.");
   }
   if (t.id === "reset") {
     s = clone(initial);
+    family = "all";
     render();
     controls();
     toast("De volta ao original.");
@@ -391,6 +436,7 @@ app.addEventListener("click", (e) => {
     s = normalizeConfiguration(
       saved.find((x) => x.id === Number(t.dataset.restore)).config,
     );
+    family = "all";
     render();
     controls();
     document.querySelector("#garage-dialog").close();

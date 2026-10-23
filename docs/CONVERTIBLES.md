@@ -1,5 +1,7 @@
 # Roadster e conversível
 
+> Registro histórico da etapa de sete modelos. A expansão seguinte implementa van, picape, jipe, esportivo futurista e compacto retrô; veja [CATALOG.md](CATALOG.md). O Targa continua pendente.
+
 Esta etapa entrega dois modelos, elevando o catálogo de cinco para sete. Picape, jipe/SUV, van clássica e esportivo Targa permanecem pendentes. A prioridade foi terminar interiores e capotas coerentes antes de ampliar o catálogo com adaptações superficiais.
 
 ## Geometria e referência

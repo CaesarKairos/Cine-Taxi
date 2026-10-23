@@ -3,8 +3,8 @@ export function materials(s) {
   const gloss = s.finish === "gloss";
   const paint = new THREE.MeshPhysicalMaterial({
     color: s.color,
-    roughness: gloss ? 0.36 : 0.86,
-    metalness: 0.05,
+    roughness: s.finish === "steel" ? 0.36 : gloss ? 0.36 : 0.86,
+    metalness: s.finish === "steel" ? 0.82 : 0.05,
     clearcoat: gloss ? 0.22 : 0,
     clearcoatRoughness: 0.38,
     flatShading: true,

@@ -1,4 +1,5 @@
-﻿import { openCoachwork, openModelData } from "./vehicle/convertibles.js";
+import { catalogData, catalogCoachwork } from "./vehicle/catalog.js";
+import { openCoachwork, openModelData } from "./vehicle/convertibles.js";
 import { normalizeConfiguration } from "./state.js";
 import * as THREE from "three";
 import { materials } from "./materials.js";
@@ -189,7 +190,11 @@ export async function buildVehicle(configuration) {
   await document.fonts.load(
     `${s.plate.font === "Barlow Condensed" ? s.plate.weight : 400} ${s.plate.size}px "${s.plate.font}"`,
   );
-  const data = a.procedural ? openModelData(s.body) : await modelData(s.body);
+  const data = a.catalog
+    ? catalogData(s.body)
+    : a.procedural
+      ? openModelData(s.body)
+      : await modelData(s.body);
   const m = materials(s),
     group = new THREE.Group();
   group.name = `vehicle-${s.body}`;
@@ -221,6 +226,32 @@ export async function buildVehicle(configuration) {
   if (s.body === "hatch") hatchCabin(group, s, m);
   if (s.body === "wagon") wagonCabin(group, s, m);
   if (a.procedural) openCoachwork(group, s, m, a);
+  if (a.catalog) catalogCoachwork(group, s, m, a);
+  if (a.catalog && !a.roundRear && s.stripes) {
+    for (const panel of [...group.children]) {
+      if (
+        !panel.geometry ||
+        panel.material !== m.paint ||
+        panel.name === "side-pillars"
+      )
+        continue;
+      const geometry = panel.geometry.index
+        ? panel.geometry.toNonIndexed()
+        : panel.geometry.clone();
+      const positions = geometry.attributes.position;
+      const vertices = [];
+      panel.updateMatrix();
+      for (let i = 0; i < positions.count; i++)
+        vertices.push(
+          ...new THREE.Vector3()
+            .fromBufferAttribute(positions, i)
+            .applyMatrix4(panel.matrix)
+            .toArray(),
+        );
+      stripes(group, vertices, m.secondary);
+      geometry.dispose();
+    }
+  }
   wheels(group, data, s, m, a);
   rearParts(group, a, s, m);
   accessories(group, a, s, m);
@@ -228,7 +259,7 @@ export async function buildVehicle(configuration) {
   group.add(
     box(
       [a.width * 0.68, 0.07, Math.abs(a.rear) * 1.35],
-      [0, 0.22, 0],
+      [0, a.chassisY ?? 0.22, 0],
       m.dark,
       0.02,
       "chassis",
