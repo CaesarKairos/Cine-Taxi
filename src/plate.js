@@ -1,0 +1,52 @@
+export const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&apos;",
+      })[c],
+  );
+let plateSequence = 0;
+const canvas = document.createElement("canvas"),
+  ctx = canvas.getContext("2d");
+export function plate(p) {
+  const clip = `plateclip-${++plateSequence}`;
+  const w = p.width,
+    h = p.height,
+    pad = p.band === "side" ? 17 : 10,
+    top = p.band === "top" ? 16 : 5;
+  const lines = p.text.split("\n");
+  ctx.font = `${p.weight} ${p.size}px "${p.font}"`;
+  const measured = Math.max(
+    1,
+    ...lines.map(
+      (l) =>
+        ctx.measureText(l).width + Math.max(0, [...l].length - 1) * p.spacing,
+    ),
+  );
+  const size = p.auto
+    ? Math.min(
+        p.size,
+        (p.size * (w - pad - 10)) / measured,
+        (h - top - 8) / lines.length,
+      )
+    : p.size;
+  const lineH = size * 1.05;
+  let y =
+    p.vertical === "top"
+      ? top + size * 0.83
+      : p.vertical === "bottom"
+        ? h - 9 - (lines.length - 1) * lineH
+        : top + (h - top - lines.length * lineH) / 2 + size * 0.83;
+  const x =
+    p.align === "left"
+      ? pad
+      : p.align === "right"
+        ? w - 9
+        : (w + (p.band === "side" ? 12 : 0)) / 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><clipPath id="${clip}"><rect x="3" y="3" width="${w - 6}" height="${h - 6}" rx="4"/></clipPath></defs><rect width="${w}" height="${h}" rx="6" fill="${p.frame ? "#262c32" : p.bg}"/><rect x="3" y="3" width="${w - 6}" height="${h - 6}" rx="4" fill="${p.bg}" stroke="${p.border}" stroke-width="${p.borderWidth}"/><g clip-path="url(#${clip})">${p.band === "top" ? `<path d="M4 4H${w - 4}V17H4Z" fill="${p.style === "mercosul" ? "#2458a7" : p.bg}"/><text x="${w / 2}" y="13" text-anchor="middle" font-family="sans-serif" font-size="8" letter-spacing="2" fill="${p.style === "mercosul" ? "white" : p.ink}">${p.style === "mercosul" ? "BRASIL" : p.style === "california" ? "California" : p.style === "cinema" ? "HILL VALLEY" : "MINI MOTOR"}</text>` : ""}${p.band === "side" ? `<path d="M4 4H17V${h - 4}H4Z" fill="#254eab"/><text x="10" y="${h / 2}" fill="white" font-size="9" text-anchor="middle">EU</text>` : ""}${lines.map((l, i) => `<text x="${x}" y="${y + i * lineH}" text-anchor="${p.align === "left" ? "start" : p.align === "right" ? "end" : "middle"}" font-family="${esc(p.font)}" font-weight="${p.weight}" font-size="${size}" letter-spacing="${p.spacing}" fill="${p.ink}">${esc(l)}</text>`).join("")}</g><g fill="#8c8d83"><circle cx="9" cy="8" r="1.5"/><circle cx="${w - 9}" cy="8" r="1.5"/></g></svg>`;
+}
