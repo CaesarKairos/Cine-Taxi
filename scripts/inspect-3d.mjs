@@ -31,14 +31,14 @@ try {
   await page.waitForLoadState("networkidle");
   await ready();
   await page.waitForFunction(
-    () => document.querySelectorAll(".body-art img").length === 5,
+    () => document.querySelectorAll(".body-art img").length === document.querySelectorAll(".body-card").length,
   );
   const mountFailures = await page.evaluate(async () => {
     const { checkMounts } = await import("/tests/mount-check.js");
     return checkMounts();
   });
   if (mountFailures.length) throw new Error(JSON.stringify(mountFailures));
-  console.log("Plate visibility: all 90 mounting scenarios passed.");
+  console.log("Plate visibility: all catalog mounting scenarios passed.");
   await page.screenshot({
     path: "screenshots/3d/01-desktop.png",
     fullPage: true,

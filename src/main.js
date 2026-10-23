@@ -17,6 +17,7 @@ import {
   clone,
   normalizeConfiguration,
 } from "./state.js";
+import { models } from "./vehicle/models.js";
 import { VehicleStudio, captureVehicle } from "./vehicle/renderer.js";
 import { exportCar } from "./export.js";
 import { plate, esc } from "./plate.js";
@@ -57,6 +58,7 @@ function get(key) {
 function set(key, value) {
   if (key.startsWith("plate.")) s.plate[key.slice(6)] = value;
   else s[key] = value;
+  if (key === "body" || key === "roof") s = normalizeConfiguration(s);
 }
 const range = (key, label, min, max, step = 1) =>
   `<label class="range-label">${label}<output>${get(key)}</output><input aria-label="${label}" type="range" data-input="${key}" min="${min}" max="${max}" step="${step}" value="${get(key)}"/></label>`;
@@ -104,7 +106,7 @@ function updateMiniature() {
 function controls() {
   let html = "";
   if (tab === "body")
-    html = `<div class="section-label"><h3>Escolha sua carroceria</h3><span>01 / 05</span></div><p class="helper">Toda grande ideia começa com uma boa silhueta.</p><div class="body-grid">${Object.entries(
+    html = `<div class="section-label"><h3>Escolha sua carroceria</h3><span>${String(Object.keys(bodies).indexOf(s.body) + 1).padStart(2, "0")} / ${String(Object.keys(bodies).length).padStart(2, "0")}</span></div><p class="helper">Toda grande ideia começa com uma boa silhueta.</p><div class="body-grid">${Object.entries(
       bodies,
     )
       .map(
@@ -113,7 +115,7 @@ function controls() {
       )
       .join(
         "",
-      )}</div><div class="note"><span>↗</span><p>Cada carroceria tem suas próprias proporções.<br>As suas peças encontram o lugar certo.</p></div><div class="section-label"><h3>Uma cor para começar</h3><button class="text-button" data-goto="paint">Explorar pintura ↗</button></div>${palette()}<div class="tip"><span>✦</span> A placa conta a história. O carro dá o tom.</div>`;
+      )}</div>${roofControls()}<div class="note"><span>↗</span><p>Cada carroceria tem suas próprias proporções.<br>As suas peças encontram o lugar certo.</p></div><div class="section-label"><h3>Uma cor para começar</h3><button class="text-button" data-goto="paint">Explorar pintura ↗</button></div>${palette()}<div class="tip"><span>✦</span> A placa conta a história. O carro dá o tom.</div>`;
   if (tab === "paint")
     html = `<h3>A cor da sua personalidade</h3><p class="helper">O clássico ou o inesperado? Você decide.</p>${palette()}${color("color", "Cor principal")}${color("secondary", "Cor secundária")}<h3 class="spaced">Acabamento</h3>${choices(
       "finish",
@@ -146,11 +148,14 @@ function controls() {
       ["classic", "Clássicas", "❂"],
       ["sport", "Esportivas", "✺"],
       ["dark", "Grafite", "◉"],
-    ])}<h3 class="spaced">Vidro traseiro</h3>${choices("glass", [
-      ["smoke", "Fumê", "◩"],
-      ["blue", "Azulado", "◩"],
-      ["amber", "Âmbar", "◩"],
-    ])}${range("window", "Área do vidro", 45, 100)}`;
+    ])}<h3 class="spaced">${models[s.body].procedural ? "Vidros" : "Vidro traseiro"}</h3>${choices(
+      "glass",
+      [
+        ["smoke", "Fumê", "◩"],
+        ["blue", "Azulado", "◩"],
+        ["amber", "Âmbar", "◩"],
+      ],
+    )}${!models[s.body].procedural || s.roof === "closed" ? range("window", "Área do vidro", 45, 100) : ""}`;
   if (tab === "details")
     html = `<h3>Os detalhes fazem o ícone.</h3><p class="helper">Só mais um toque para ficar com a sua cara.</p>${toggle("stripes", "Faixas de corrida")}${toggle("trim", "Friso cromado lateral")}${toggle("sticker", "Adesivo de estrela")}<div class="note"><span>★</span><p>As faixas usam a cor secundária.<br>Experimente outras combinações na pintura.</p></div>`;
   if (tab === "plate")
@@ -196,6 +201,13 @@ function controls() {
     )}<p class="helper">As dimensões são proporcionais. Placas maiores são acomodadas no suporte sem distorcer o texto.</p></details>`;
   document.querySelector("#controls").innerHTML = html;
 }
+function roofControls() {
+  if (!models[s.body].roofs) return "";
+  return `<h3 class="spaced">Capota</h3>${choices("roof", [
+    ["open", "Aberta", "☀"],
+    ["closed", "Fechada", "⌒"],
+  ])}<p class="helper">Habitáculo de dois lugares, com bancos, painel e volante em 3D.</p>${color("interior", "Cor do interior")}`;
+}
 function palette() {
   return `<div class="palette">${colors.map((c, i) => `<button aria-label="Cor ${["coral", "mostarda", "sálvia", "azul", "lavanda", "creme", "grafite", "rosa"][i]}" title="${c}" style="--swatch:${c}" data-key="color" data-value="${c}" class="${s.color === c ? "picked" : ""}">${s.color === c ? "✓" : ""}</button>`).join("")}</div>`;
 }
@@ -224,7 +236,7 @@ function render(animate = false) {
       console.error(error);
     });
   document.querySelector("#model-name").textContent =
-    `${s.body==='wagon'?'A sua':'O seu'} ${bodies[s.body].name.toLowerCase()}.`;
+    `${s.body === "wagon" ? "A sua" : "O seu"} ${bodies[s.body].name.toLowerCase()}.`;
   document.querySelector("#model-code").textContent =
     `MM—0${Object.keys(bodies).indexOf(s.body) + 1}`;
   document.querySelector("#color-dot").style.background = s.color;
@@ -329,6 +341,7 @@ app.addEventListener("click", (e) => {
   if (t.id === "random") {
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
     s.body = pick(Object.keys(bodies));
+    s = normalizeConfiguration(s);
     s.color = pick(colors);
     s.secondary = pick(colors);
     s.bumper = pick(["chrome", "painted", "sport"]);

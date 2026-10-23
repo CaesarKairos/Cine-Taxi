@@ -112,7 +112,7 @@ export function rearParts(group, a, s, m) {
     cluster.name = "taillight";
     cluster.position.set(x, a.lightY, -0.047);
     if (s.lights === "round") {
-      for (const offset of [-0.071, 0.071]) {
+      for (const offset of s.body === "roadster" ? [0] : [-0.071, 0.071]) {
         const bezel = cylinder(0.063, 0.032, m.chrome);
         bezel.position.x = offset;
         cluster.add(bezel);
@@ -209,7 +209,11 @@ export function rearParts(group, a, s, m) {
   );
   rear.add(
     box(
-      [a.width + 0.07, s.bumper === "sport" ? 0.18 : 0.115, 0.18],
+      [
+        a.width + 0.07,
+        s.bumper === "sport" ? 0.18 : s.body === "roadster" ? 0.075 : 0.115,
+        0.18,
+      ],
       [0, a.bumperY, -0.012],
       bumperMat,
       0.037,
@@ -272,7 +276,7 @@ export function rearParts(group, a, s, m) {
 export function accessories(group, a, s, m) {
   if (s.spoiler !== "none") {
     const high = s.body === "hatch" || s.body === "wagon";
-    const baseY = high ? a.roof - 0.03 : a.deck;
+    const baseY = high ? a.roof - 0.03 : (a.spoilerY ?? a.deck);
     const z = high ? a.glassCenter[2] + 0.035 : a.spoilerZ;
     const rise =
       s.spoiler === "wild" ? 0.26 : s.spoiler === "sport" ? 0.13 : 0.025;

@@ -1,4 +1,6 @@
-﻿import * as THREE from "three";
+﻿import { openCoachwork, openModelData } from "./vehicle/convertibles.js";
+import { normalizeConfiguration } from "./state.js";
+import * as THREE from "three";
 import { materials } from "./materials.js";
 import { models, modelData } from "./vehicle/models.js";
 import { mesh, box, surface } from "./vehicle/geometry.js";
@@ -182,12 +184,12 @@ function muscleCabin(group, a, s, m) {
       );
 }
 export async function buildVehicle(configuration) {
-  const s = structuredClone(configuration),
+  const s = normalizeConfiguration(configuration),
     a = models[s.body] || models.coupe;
   await document.fonts.load(
     `${s.plate.font === "Barlow Condensed" ? s.plate.weight : 400} ${s.plate.size}px "${s.plate.font}"`,
   );
-  const data = await modelData(s.body);
+  const data = a.procedural ? openModelData(s.body) : await modelData(s.body);
   const m = materials(s),
     group = new THREE.Group();
   group.name = `vehicle-${s.body}`;
@@ -218,6 +220,7 @@ export async function buildVehicle(configuration) {
   if (s.body === "muscle") muscleCabin(group, a, s, m);
   if (s.body === "hatch") hatchCabin(group, s, m);
   if (s.body === "wagon") wagonCabin(group, s, m);
+  if (a.procedural) openCoachwork(group, s, m, a);
   wheels(group, data, s, m, a);
   rearParts(group, a, s, m);
   accessories(group, a, s, m);

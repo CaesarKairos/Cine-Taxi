@@ -1,5 +1,8 @@
+import { models } from "./vehicle/models.js";
 export const initial = {
   body: "coupe",
+  roof: "fixed",
+  interior: "#d7aa73",
   color: "#df593e",
   secondary: "#f5e4bd",
   finish: "gloss",
@@ -39,6 +42,8 @@ export const bodies = {
   coupe: { name: "Cupê", tag: "Alma esportiva" },
   muscle: { name: "Muscle", tag: "Pura presença" },
   wagon: { name: "Perua", tag: "Mais histórias" },
+  roadster: { name: "Roadster", tag: "California · 1961" },
+  convertible: { name: "Conversível", tag: "Céu aberto" },
 };
 export function normalizeConfiguration(value = {}) {
   const config = {
@@ -47,6 +52,8 @@ export function normalizeConfiguration(value = {}) {
     plate: { ...initial.plate, ...value.plate },
   };
   if (!bodies[config.body]) config.body = initial.body;
+  const roofs = models[config.body].roofs || ["fixed"];
+  if (!roofs.includes(config.roof)) config.roof = roofs[0];
   return config;
 }
 export const colors = [

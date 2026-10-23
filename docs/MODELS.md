@@ -27,6 +27,8 @@ Os frisos encontram as faces da carroceria por interseção de raios em espaço 
 
 ## Conversão reproduzível
 
+Roadster e conversível moderno são carrocerias originais geradas por `src/vehicle/convertibles.js`. Não utilizam doadores, não exigem conversão GLB e não alteram os cinco arquivos de malha existentes. A autoria, os interiores, as capacidades de capota e os modelos ainda pendentes estão em [CONVERTIBLES.md](CONVERTIBLES.md).
+
 Baixe e extraia o arquivo acima. A preparação requer Python com Pillow, somente durante a autoria:
 
 ```sh

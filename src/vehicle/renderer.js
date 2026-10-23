@@ -98,10 +98,11 @@ class Engine {
     this.floor.visible = this.shadow.visible = !transparent;
     const bounds = new THREE.Box3().setFromObject(this.model),
       center = bounds.getCenter(new THREE.Vector3());
+    const openCabin = this.model.userData.configuration.roof === "open";
     const offset =
       view === "rear"
-        ? new THREE.Vector3(0, 2.3, -10)
-        : new THREE.Vector3(-2.8, 2.8, -10);
+        ? new THREE.Vector3(0, openCabin ? 2.9 : 2.3, -10)
+        : new THREE.Vector3(-2.8, openCabin ? 3.5 : 2.8, -10);
     this.camera.position.copy(center).add(offset);
     this.camera.lookAt(center);
     this.camera.updateMatrixWorld();

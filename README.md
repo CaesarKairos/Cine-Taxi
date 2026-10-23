@@ -15,7 +15,8 @@ Abra o endereço informado pelo Vite. `npm run build` gera `dist/`; `npm run pre
 
 ## Renderizador 3D
 
-- Cinco modelos: sedã com porta-malas, hatch curto, cupê baixo, muscle largo e perua com teto prolongado.
+- Sete modelos: sedã, hatch, cupê, muscle, perua, roadster clássico e conversível moderno.
+- Roadster e conversível têm carrocerias próprias, habitáculo aberto com bancos, painel, volante e forros de porta. A seleção de capota aberta/fechada e a cor do interior aparecem somente nos modelos compatíveis.
 - Chassis adaptados de malhas Kenney; hatch, muscle e perua recebem cabines próprias.
 - Rodas tridimensionais, eixos, caixas de roda das malhas, para-choques com volume, lanternas, escapamentos, aerofólios e detalhes montados em coordenadas locais de cada carroceria.
 - Pintura brilhante/fosca, vidro, metal e borracha separados; iluminação de estúdio e sombras no chão.
@@ -49,6 +50,7 @@ As configurações continuam no `localStorage`, na chave original `mini-motor-ga
 | `src/car.js`                    | Montagem do veículo, geometria semântica, faixas e cabine muscle |
 | `src/vehicle/models.js`         | Medidas e pontos de montagem de cada modelo                      |
 | `src/vehicle/cabins.js`         | Cabines e janelas do hatch e da perua                            |
+| `src/vehicle/convertibles.js`   | Carrocerias abertas, interiores e capotas de autoria própria     |
 | `src/vehicle/parts.js`          | Rodas, lanternas, para-choques, placa e acessórios               |
 | `src/vehicle/geometry.js`       | Primitivas e liberação de recursos                               |
 | `src/materials.js`              | Materiais físicos                                                |
@@ -80,3 +82,11 @@ node scripts/inspect-3d.mjs
 ```
 
 As capturas novas estão em `screenshots/3d/`. Veja [docs/VISUAL-QA.md](docs/VISUAL-QA.md) para a inspeção visual, correções e limitações. As capturas da primeira implementação permanecem em `screenshots/` para comparação histórica.
+
+Para capturar os dois conversíveis, nas duas posições de capota e nos dois ângulos:
+
+```sh
+node scripts/inspect-convertibles.mjs
+```
+
+O script usa `http://127.0.0.1:5173` por padrão; `STUDIO_URL` permite outro endereço. Os resultados ficam em `screenshots/convertibles/`. A decisão de escopo, os modelos pendentes e a geometria dos interiores estão em [docs/CONVERTIBLES.md](docs/CONVERTIBLES.md).
