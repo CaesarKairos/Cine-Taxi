@@ -1,5 +1,20 @@
 import { test, expect } from "@playwright/test";
 
+test("the home studio starts with the NRVOUS roadster", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() =>
+    document.querySelector("#car-preview")?.dataset.ready === "true",
+  );
+  await expect(page.locator("#car-preview")).toHaveAttribute("data-body", "roadster");
+  await expect(page.locator("#model-name")).toHaveText("O seu roadster.");
+  await expect(page.locator('[data-key="body"][data-value="roadster"]')).toHaveClass(/selected/);
+  await expect(page.locator('[data-key="roof"][data-value="open"]')).toHaveClass(/selected/);
+  await expect(page.locator('[data-key="color"][data-value="#ba252b"]')).toHaveClass(/picked/);
+  await expect(page.getByLabel("Cor do interior")).toHaveValue("#f0dbc2");
+  await page.locator('[data-tab="plate"]').click();
+  await expect(page.getByLabel("Texto da placa", { exact: true })).toHaveValue("NRVOUS");
+});
+
 test("open cabins, roof compatibility and old configurations", async ({
   page,
 }) => {

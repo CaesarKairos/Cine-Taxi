@@ -209,7 +209,7 @@ function roofControls() {
   ])}<p class="helper">Habitáculo de dois lugares, com bancos, painel e volante em 3D.</p>${color("interior", "Cor do interior")}`;
 }
 function palette() {
-  return `<div class="palette">${colors.map((c, i) => `<button aria-label="Cor ${["coral", "mostarda", "sálvia", "azul", "lavanda", "creme", "grafite", "rosa"][i]}" title="${c}" style="--swatch:${c}" data-key="color" data-value="${c}" class="${s.color === c ? "picked" : ""}">${s.color === c ? "✓" : ""}</button>`).join("")}</div>`;
+  return `<div class="palette">${colors.map((c, i) => `<button aria-label="Cor ${["vermelho cinema", "coral", "mostarda", "sálvia", "azul", "lavanda", "creme", "grafite", "rosa"][i]}" title="${c}" style="--swatch:${c}" data-key="color" data-value="${c}" class="${s.color === c ? "picked" : ""}">${s.color === c ? "✓" : ""}</button>`).join("")}</div>`;
 }
 function render(animate = false) {
   const revision = ++renderRevision;
@@ -242,6 +242,7 @@ function render(animate = false) {
   document.querySelector("#color-dot").style.background = s.color;
   document.querySelector("#color-name").textContent =
     {
+      "#ba252b": "Vermelho de cinema",
       "#df593e": "Coral de garagem",
       "#f1b849": "Mostarda solar",
       "#87a996": "Verde sálvia",

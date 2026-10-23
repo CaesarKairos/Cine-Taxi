@@ -26,7 +26,7 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   await page.locator('[data-key="body"][data-value="wagon"]').click();
   await page.locator("#garage").click();
   await page.locator("[data-restore]").first().click();
-  await expect(page.locator("#model-name")).toHaveText("O seu cupê.");
+  await expect(page.locator("#model-name")).toHaveText("O seu roadster.");
   for (const [body, color, text] of [
     ["sedan", "#6389b5", "BLUE 77"],
     ["hatch", "#87a996", "ECTO-1"],
@@ -106,6 +106,8 @@ test("estúdio, garagem, placas, combinações e exportações", async ({
   const svg = await fs.readFile("screenshots/export-plate-svg.svg", "utf8");
   expect(svg).toContain("data:font");
   expect(svg).toContain("NRVOUS");
+  await page.locator('[data-tab="body"]').click();
+  await page.locator('[data-key="roof"][data-value="closed"]').click();
   await page.locator('[data-tab="parts"]').click();
   await page.locator('[data-key="bumper"][data-value="sport"]').click();
   await page.locator('[data-key="spoiler"][data-value="wild"]').click();

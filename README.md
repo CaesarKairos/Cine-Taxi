@@ -4,6 +4,8 @@ Estúdio local para criar miniaturas de carros e placas. A interface original fo
 
 Escolha uma carroceria, experimente cores e peças e crie uma placa com a sua assinatura. Depois, leve sua miniatura para fora da garagem.
 
+O estúdio abre com um **roadster clássico vermelho, capota aberta, interior creme e placa NRVOUS**, inspirado no detalhe cinematográfico que deu origem ao projeto. O botão **Recomeçar** restaura essa demonstração; a garagem continua preservando as criações salvas.
+
 | Cupê · NRVOUS | Roadster clássico · NRVOUS |
 | :---: | :---: |
 | <img src="screenshots/export-png.png" alt="Miniatura 3D de um cupê coral com lanternas redondas, para-choque cromado e placa NRVOUS" width="400"> | <img src="screenshots/convertibles/export-png.png" alt="Miniatura 3D de um roadster vermelho com capota aberta, bancos claros e placa NRVOUS" width="400"> |

@@ -1,9 +1,9 @@
 import { models } from "./vehicle/models.js";
 export const initial = {
-  body: "coupe",
-  roof: "fixed",
-  interior: "#d7aa73",
-  color: "#df593e",
+  body: "roadster",
+  roof: "open",
+  interior: "#f0dbc2",
+  color: "#ba252b",
   secondary: "#f5e4bd",
   finish: "gloss",
   bumper: "chrome",
@@ -57,6 +57,7 @@ export function normalizeConfiguration(value = {}) {
   return config;
 }
 export const colors = [
+  "#ba252b",
   "#df593e",
   "#f1b849",
   "#87a996",
