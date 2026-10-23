@@ -2,6 +2,14 @@
 
 Estúdio local para criar miniaturas de carros e placas. A interface original foi preservada; os carros agora são cenas **Three.js / WebGL 2** com geometria tridimensional, câmera ortográfica e peças substituíveis.
 
+Escolha uma carroceria, experimente cores e peças e crie uma placa com a sua assinatura. Depois, leve sua miniatura para fora da garagem.
+
+| Cupê · NRVOUS | Roadster clássico · NRVOUS |
+| :---: | :---: |
+| <img src="screenshots/export-png.png" alt="Miniatura 3D de um cupê coral com lanternas redondas, para-choque cromado e placa NRVOUS" width="400"> | <img src="screenshots/convertibles/export-png.png" alt="Miniatura 3D de um roadster vermelho com capota aberta, bancos claros e placa NRVOUS" width="400"> |
+
+*Carros exportados pelo próprio customizador, em PNG com fundo transparente.*
+
 ## Executar
 
 Node.js 22.12+ (validado com Node 24):
@@ -36,6 +44,10 @@ O editor SVG 2D mantém texto livre, múltiplas linhas, fontes, alinhamentos, ta
 | Ícone     | O mesmo carro 3D, fundo transparente, 256 × 256  |
 
 O chão e sua sombra são exclusivos do estúdio e não aparecem nos PNGs. Em ícones pequenos, placas com textos longos perdem legibilidade naturalmente.
+
+| Sua placa, em SVG | Seu carro, em versão colecionável |
+| :---: | :---: |
+| <img src="screenshots/export-plate-svg.svg" alt="Placa personalizada com o texto NRVOUS, fundo creme e moldura escura" width="328"> | <img src="screenshots/convertibles/export-icon.png" alt="Ícone do roadster vermelho com interior visível e placa NRVOUS" width="160"> |
 
 ## Garagem
 
