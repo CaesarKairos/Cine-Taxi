@@ -178,9 +178,30 @@ export class VehicleStudio {
       pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
     });
     this.revision = 0;
+    const report = (error) => {
+      console.error("Mini Motor: renderização interrompida", error);
+      host.dataset.ready = "false";
+      let notice = host.querySelector(".render-error");
+      if (!notice) {
+        notice = document.createElement("p");
+        notice.className = "render-error";
+        notice.setAttribute("role", "alert");
+        host.append(notice);
+      }
+      notice.textContent =
+        "A visualização 3D foi interrompida. Recarregue a página para recuperar o contexto gráfico. Sua garagem permanece neste navegador.";
+    };
+    this.canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      report(new Error("Contexto WebGL perdido"));
+    });
     this.resizeObserver = new ResizeObserver(() => {
-      this.engine.resize(host.clientWidth, host.clientHeight);
-      this.engine.draw();
+      try {
+        this.engine.resize(host.clientWidth, host.clientHeight);
+        this.engine.draw();
+      } catch (error) {
+        report(error);
+      }
     });
     this.resizeObserver.observe(host);
   }

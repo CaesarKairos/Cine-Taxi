@@ -31,10 +31,10 @@ Leia o [guia de implantação e validação](docs/CLOUDFLARE_PAGES.md) para os t
 
 ## Executar
 
-Node.js 22.12+ (validado com Node 24):
+Node.js 22.12+ na linha 22, ou 24+ (validado com Node 24.16.0):
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
@@ -146,3 +146,15 @@ node scripts/gallery-catalog.mjs
 ```
 
 As capturas ficam em `screenshots/catalog/`. Os testes incluem caçamba aberta, capacidades incompatíveis, restauração da garagem, demonstração inicial e obstrução da placa com acessórios instalados. A documentação histórica dos sete modelos anteriores foi preservada.
+
+## Validar a compilação de produção
+
+```sh
+npm ci
+npx playwright install chromium
+npm run test:production
+```
+
+O smoke inicia automaticamente o preview de `dist/` e verifica as 12 carrocerias, personalização, garagem persistida, exportações, mobile e falhas de carregamento. Capturas reais ficam em `screenshots/production/`. O workflow `.github/workflows/production.yml` executa a mesma verificação.
+
+A tela branca publicada foi reproduzida: o domínio entregava `/src/main.js` com imports npm sem empacotar, que o navegador rejeita antes da interface iniciar. Publique exclusivamente `dist/`, com build `npm run build`. Consulte o [diagnóstico e configuração definitiva](docs/CLOUDFLARE_PAGES.md). O deployment público precisa ser refeito e verificado após estas alterações.

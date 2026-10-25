@@ -256,6 +256,7 @@ function render(animate = false) {
     ?.update(snapshot)
     .then((accepted) => {
       if (accepted && revision === renderRevision) {
+        document.querySelector("#car-preview .render-error")?.remove();
         updateMiniature();
         const preview = document.querySelector("#plate-preview");
         if (preview) preview.innerHTML = plate(snapshot.plate);
@@ -270,8 +271,20 @@ function render(animate = false) {
         });
     })
     .catch((error) => {
-      toast("Não foi possível renderizar o veículo.");
       console.error(error);
+      if (revision !== renderRevision) return;
+      const host = document.querySelector("#car-preview");
+      host.dataset.ready = "false";
+      let notice = host.querySelector(".render-error");
+      if (!notice) {
+        notice = document.createElement("p");
+        notice.className = "render-error";
+        notice.setAttribute("role", "alert");
+        host.append(notice);
+      }
+      notice.textContent =
+        "N\u00e3o foi poss\u00edvel carregar este ve\u00edculo. Escolha outra carroceria ou tente novamente.";
+      toast(notice.textContent);
     });
   document.querySelector("#model-name").textContent =
     `${s.body === "wagon" ? "A sua" : "O seu"} ${bodies[s.body].name.toLowerCase()}.`;
@@ -492,18 +505,28 @@ function openGarage() {
 }
 controls();
 render();
-document.fonts.ready.then(async () => {
-  if (!studio) return;
-  render();
-  for (const id of Object.keys(bodies)) {
-    thumbnails.set(
-      id,
-      await captureVehicle(
-        { ...clone(initial), body: id, color: "#8b9d90" },
-        { width: 220, height: 140 },
-      ),
-    );
-  }
-  if (tab === "body") controls();
-});
+document.fonts.ready
+  .then(async () => {
+    if (!studio) return;
+    render();
+    for (const id of Object.keys(bodies)) {
+      try {
+        thumbnails.set(
+          id,
+          await captureVehicle(
+            { ...clone(initial), body: id, color: "#8b9d90" },
+            { width: 220, height: 140 },
+          ),
+        );
+      } catch (error) {
+        console.error(`Miniatura ${id} indisponível`, error);
+        toast("Uma miniatura não carregou. Você pode continuar no estúdio.");
+      }
+    }
+    if (tab === "body") controls();
+  })
+  .catch((error) => {
+    console.error(error);
+    toast("Não foi possível preparar as miniaturas.");
+  });
 window.addEventListener("pagehide", () => studio?.dispose());

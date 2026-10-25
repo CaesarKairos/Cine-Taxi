@@ -1283,3 +1283,16 @@ dialog::backdrop {
   scrollbar-width: thin;
   scrollbar-color: #b5bfac transparent;
 }
+
+#car-preview {
+  position: relative;
+}
+#car-preview .render-error {
+  position: absolute;
+  inset: 20% 8%;
+  z-index: 2;
+  background: #f7f5ef;
+  border: 1px solid #ba252b;
+  border-radius: 12px;
+  height: fit-content;
+}

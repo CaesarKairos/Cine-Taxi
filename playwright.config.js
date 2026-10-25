@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
+  testIgnore: "**/production/**",
   timeout: 600000,
   use: {
     baseURL: process.env.STUDIO_URL || "http://127.0.0.1:5173",

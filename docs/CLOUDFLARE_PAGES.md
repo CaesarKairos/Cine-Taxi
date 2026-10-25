@@ -1,78 +1,89 @@
-# Publicação do Cine-Taxi no Cloudflare Pages
+# Diagnóstico e publicação do Mini Motor no Cloudflare Pages
 
-## Arquitetura
+## Causa comprovada da tela branca
 
-O Cine-Taxi é uma aplicação **Vite + JavaScript + Three.js** totalmente client-side.
+Na inspeção de 25/10/2026, https://cine-taxi.pages.dev/ respondeu HTTP 200, mas entregou o HTML-fonte com `<script type="module" src="/src/main.js">`. O arquivo público continha imports de pacotes sem empacotar. O Chromium/Playwright registrou:
 
-1. O Cloudflare Pages hospeda o `index.html`, os módulos JavaScript empacotados, CSS, fontes e modelos JSON.
-2. O navegador do visitante baixa esses arquivos e renderiza os carros usando **WebGL 2**. A plataforma não precisa renderizar imagens 3D no servidor.
-3. Os modelos originais de `public/models/*.json` são copiados pelo Vite para `dist/models/*.json`; `src/vehicle/models.js` já usa `import.meta.env.BASE_URL` para carregá-los.
-4. A garagem usa `localStorage`: os dados permanecem apenas naquele navegador e origem. Não há sincronização automática entre computadores, celulares ou domínios.
+```
+Failed to resolve module specifier "@fontsource/space-grotesk/latin-400.css".
+Relative references must start with either "/", "./", or "../".
+```
 
-Não são necessários **Pages Functions, Workers, D1, KV, R2, SSR, proxies ou regras de reescrita** para a versão atual.
+O navegador abortava o módulo antes de construir a interface, e `#app` ficava vazio. A evidência comprova a publicação dos fontes em vez do artefato Vite. Não houve acesso ao painel para determinar qual configuração ou upload originou esse deploy. O build local empacota Three.js e fontes corretamente; não há necessidade de trocar a stack.
 
-## Configuração do projeto Pages
+## Configuração definitiva no painel
 
-No [painel Cloudflare](https://dash.cloudflare.com/?to=/:account/workers-and-pages):
-
-1. Acesse **Workers & Pages**, crie uma aplicação do tipo **Pages** e escolha conectar um repositório Git.
-2. Autorize o acesso ao GitHub, se solicitado, e selecione `CaesarKairos/Cine-Taxi`.
-3. Configure os seguintes valores:
+Em Workers & Pages → Cine-Taxi → Settings → Builds & deployments, configure:
 
 | Campo | Valor |
 | --- | --- |
+| Repositório | `CaesarKairos/Cine-Taxi` |
 | Production branch | `main` |
-| Root directory | `/` (raiz do repositório) |
-| Framework preset | `None` (configuração manual) |
+| Root directory | vazio (raiz do repositório) |
+| Framework preset | `None` |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Build image | v3 |
-| Node.js | `22.16.0` (via `.node-version`) |
+| Node | `22.16.0`, conforme `.node-version` |
 
-4. Salve e inicie o deploy. O Pages publicará uma URL do tipo `https://<nome-do-projeto>.pages.dev` **após um deploy bem-sucedido**.
-5. Configure opcionalmente um domínio próprio no projeto. Deploys futuros na branch `main` serão iniciados pela integração Git, se habilitada.
+Remova eventual variável `NODE_ENV=production` que impeça instalar as devDependencies necessárias ao build. Se existir override `NODE_VERSION`, use `22.16.0` ou remova-o para respeitar `.node-version`.
 
-Não configure o diretório de saída como `public`: ele contém apenas os modelos-fonte do Vite, não o site pronto.
+Salve e gere novo deployment a partir do commit com estas alterações. Confira nos logs a execução do Vite e a mensagem `Production artifact verified`. A integração Git inicia novos builds da `main`; o workflow de smoke verifica o artefato, mas não realiza deploy. Em upload manual, envie somente o conteúdo de `dist/`.
 
-## Verificação local antes de publicar
+A correção local não altera o deployment existente. Após publicar, confirme que o HTML público referencia `/assets/index-*.js`, nunca `/src/`. Compare também o commit do deployment com o commit enviado.
 
-Com Node.js compatível e as dependências instaladas:
+## Arquitetura e validação reproduzível
+
+Aplicação estática Vite + Three.js executada no navegador com WebGL 2. A garagem mantém `localStorage` e sua chave original. Não usa servidor Node em produção, SSR, banco, Functions ou Workers. Não são necessários Wrangler, `_headers` ou `_redirects`.
 
 ```sh
 npm ci
+npx playwright install chromium
+npm run test:production
+```
+
+O comando compila o projeto, verifica `dist/index.html`, referências compiladas, CSS, fontes e cópia integral dos cinco JSON-base, inicia `npm run preview` em `127.0.0.1:4173` e executa o Playwright sobre essa versão. As 12 carrocerias combinam esses modelos-base com geometrias procedurais.
+
+O smoke cobre inicialização, 12 seleções, cores, câmeras, placa, garagem após reload, download PNG/ícone/SVG com fonte embutida, mobile, erros de console/página/rede e falhas simuladas de WebGL, módulo e modelo. Evidências em `screenshots/production/` e anexos de rede em `test-results/`. O GitHub Actions repete essa validação em pushes da `main` e PRs.
+
+Para inspeção manual:
+
+```sh
 npm run build
 npm run preview
 ```
 
-Use a URL indicada pelo `vite preview` para verificar a versão de produção. O build deve criar `dist/index.html` e `dist/models/` com os cinco modelos JSON base, além de `dist/assets/`.
+`vite preview` é apenas servidor local de validação. Cloudflare hospeda diretamente `dist/`. Não publique a raiz, `src/` ou somente `public/`. A entrada pequena carrega o módulo principal e seu CSS compilado dinamicamente; por isso o CSS pode ser referenciado pelo bundle em vez de um `<link>` no HTML.
 
-A pasta `screenshots/` é documentação e não deve ser publicada como conteúdo da aplicação.
+## Diagnóstico de falhas futuras
 
-## Checklist pós-deploy
+| Sintoma | Verificação / ação |
+| --- | --- |
+| HTML referencia `/src/` ou erro de module specifier | Corrigir build command e output para `npm run build` e `dist`; refazer deploy. |
+| JS/CSS retorna HTML ou MIME incorreto | Conferir URL, conteúdo e artefato publicado; um fallback SPA pode devolver HTML 200 para arquivo ausente. |
+| Modelo ausente | Conferir `/models/*.json`, resposta JSON, maiúsculas/minúsculas e cópia de `public/models/` para `dist/models/`. |
+| Fonte ausente | Conferir `/assets/*.woff2` e CSS compilado; não servir imports npm diretamente. |
+| WebGL 2 indisponível | A interface mostra explicação; habilitar aceleração gráfica ou usar navegador compatível. |
+| Contexto gráfico perdido | Mensagem persistente orienta recarregar; garagem salva permanece no navegador. |
+| Erro de módulo/inicialização | HTML inicial e aviso de falha evitam página vazia; consultar console. |
+| Uma carroceria falha | Aviso no preview; selecionar outra ou tentar novamente. Miniaturas falhas não interrompem as demais. |
+| Garagem parece vazia em outro domínio | `localStorage` pertence à origem e ao navegador; não há sincronização. |
 
-- A página inicial exibe o roadster vermelho, capota aberta, interior claro e placa **NRVOUS**.
-- As **12 carrocerias** e seus cartões de seleção carregam; alterne pelo menos uma de cada família.
-- A rede do navegador não deve mostrar 404 para `/models/*.json`, fontes ou bundles JS/CSS.
-- Alterações de pintura, peças e texto da placa são refletidas no renderizador.
-- A câmera alterna entre traseira e ¾ sem perder a placa.
-- Exportação de PNG, ícone e placa SVG funciona no domínio publicado.
-- Salvar na garagem, atualizar a página e restaurar uma criação funcionam no mesmo navegador.
-- A interface funciona no celular; WebGL 2 deve estar disponível no aparelho.
+Não publique mensagens de sucesso baseadas apenas no dev server. Verifique o domínio após o novo deploy: roadster vermelho aberto, NRVOUS, modelos, cores, peças, placa, garagem e exportações, também no celular.
 
-Se surgirem erros, confira primeiro os logs de build no Pages e a aba Network/Console do navegador. O desenvolvimento não precisa de proxy ou APIs privadas.
+Referências: [Cloudflare build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/) e [Vite static deployment](https://vite.dev/guide/static-deploy.html).
+## Evidências da validação local
 
-## Observações importantes
+Validação em 25/10/2026, Windows, Node.js 24.16.0, Chromium com renderização por software:
 
-- `localStorage` é separado por **origem**. Uma garagem salva em `localhost` não aparece em `*.pages.dev`; mudar de domínio também não migra dados automaticamente.
-- Não adicione um `404.html` nem um `_redirects` SPA sem necessidade: o Pages oferece fallback de single-page application quando não há `404.html` superior, e o site atual possui somente a página principal.
-- Não configure cache manual agressivo para HTML ou outros arquivos do site: Pages gerencia sua estratégia de cache por deploy.
-- Os limites atuais de Pages incluem **25 MiB por arquivo estático** e limites por quantidade de arquivos; verifique-os se novos pacotes 3D forem adicionados.
-- Quando houver contas, catálogos compartilhados ou sincronização de garagem, reavalie Pages Functions + D1/R2. Essas mudanças são uma nova etapa, não requisito do deploy atual.
+- `npm ci`: 24 pacotes instalados, auditoria sem vulnerabilidades.
+- `npm run build`: sucesso; artefato estático verificado, com fontes e modelos locais. O Vite avisa que o bundle principal de Three.js ultrapassa 500 kB; é um aviso de tamanho, sem impedir a compilação.
+- Fluxo compilado: as 12 carrocerias renderizaram; cores, câmeras, placa, garagem após reload, PNG, ícone e SVG com fonte embutida passaram.
+- Rede: nenhum HTTP 4xx/5xx ou requestfailed no fluxo funcional; MIME de JS, CSS e JSON validado. Nenhum erro de console ou página nesse fluxo.
+- Mobile: 390 × 844, placa editável, sem overflow horizontal.
+- Capturas inspecionadas: [desktop](../screenshots/production/desktop.png) e [mobile](../screenshots/production/mobile.png).
+- Os limites dos testes consideram a renderização por software: 10 minutos por teste e 60 segundos por asserção. A primeira execução com limites menores expirou durante reload/restauração; não foi considerada aprovação.
 
-## Referências oficiais
+O domínio público foi inspecionado para diagnóstico, mas nenhum novo deployment foi realizado ou validado com estas alterações. É necessário publicar o commit e verificar o novo deployment no Pages.
 
-- https://developers.cloudflare.com/pages/configuration/build-configuration/
-- https://developers.cloudflare.com/pages/configuration/build-image/
-- https://developers.cloudflare.com/pages/configuration/serving-pages/
-- https://developers.cloudflare.com/pages/get-started/git-integration/
-- https://developers.cloudflare.com/pages/platform/limits/
+Resultado final de `npm run test:production`: **4 passed (5.1m)**, incluindo o fluxo funcional completo e os três cenários de falha. As alterações permanecem locais nesta entrega; não houve push nem alteração do painel Cloudflare.
