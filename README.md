@@ -12,6 +12,23 @@ O estúdio abre com um **roadster clássico vermelho, capota aberta, interior cr
 
 *Carros exportados pelo próprio customizador, em PNG com fundo transparente.*
 
+## Publicar no Cloudflare Pages
+
+O Mini Motor funciona como site estático gerado pelo Vite: o Three.js renderiza no navegador, os modelos em `public/models/` entram no build e não é necessário backend.
+
+No painel [Cloudflare Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages), crie um **Pages project** conectado ao repositório GitHub `CaesarKairos/Cine-Taxi` e use:
+
+- Branch de produção: `main`
+- Diretório raiz: `/` (raiz do repositório)
+- Framework preset: `None` (configuração manual)
+- Comando de build: `npm run build`
+- Diretório de saída: `dist`
+- Build image: v3; Node.js definido em `.node-version`
+
+Assim que o Pages concluir o build, abra o endereço `*.pages.dev` informado no painel. Commits futuros na `main` podem gerar deploys automaticamente. **A integração da conta Cloudflare/GitHub é feita no painel; este repositório não publica sozinho.**
+
+Leia o [guia de implantação e validação](docs/CLOUDFLARE_PAGES.md) para os testes de modelos, fontes, garagem e exportações.
+
 ## Executar
 
 Node.js 22.12+ (validado com Node 24):
